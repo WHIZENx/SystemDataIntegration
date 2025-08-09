@@ -12,6 +12,7 @@ interface ExportButtonsProps {
   setIsExportingExcel: (value: boolean) => void;
   setIsExportingCSV: (value: boolean) => void;
   setError: (value: string) => void;
+  setSuccess: (value: string) => void;
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
@@ -23,7 +24,8 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   setIsExporting,
   setIsExportingExcel,
   setIsExportingCSV,
-  setError
+  setError,
+  setSuccess
 }) => {
   
   // Handler for Google Sheets export
@@ -35,10 +37,11 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
 
     setIsExporting(true);
     setError('');
+    setSuccess('');
     try {
       const exportedRecords = await exportToGoogleSheets(records);
       // Show success message
-      alert(`Successfully exported ${exportedRecords.length} records to Google Sheets!`);
+      setSuccess(`Successfully exported ${exportedRecords.length} records to Google Sheets!`);
     } catch (err) {
       setError('Failed to export records: ' + (err as Error).message);
     } finally {
@@ -55,6 +58,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
 
     setIsExportingExcel(true);
     setError('');
+    setSuccess('');
     try {
       await exportToExcel(records);
     } catch (err) {
@@ -73,6 +77,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
 
     setIsExportingCSV(true);
     setError('');
+    setSuccess('');
     try {
       await exportToCSV(records);
     } catch (err) {

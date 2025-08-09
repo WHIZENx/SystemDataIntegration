@@ -239,7 +239,7 @@ const App: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
                   <h2 className="text-lg font-medium text-gray-900">Records ({records.length})</h2>
                   <div className="flex gap-2">
                     <ExportButtons 
@@ -252,6 +252,7 @@ const App: React.FC = () => {
                       setIsExportingExcel={setIsExportingExcel}
                       setIsExportingCSV={setIsExportingCSV}
                       setError={setError}
+                      setSuccess={setSuccess}
                     />
                     <button
                       onClick={loadRecords}
