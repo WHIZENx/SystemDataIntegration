@@ -287,7 +287,7 @@ class NeonAPIService {
       //   }
       // });
 
-      const endpoint = `/employees?name=like.%${criteria.name}%`;
+      const endpoint = `/employees?name=ilike.%${criteria.name}%`;
       
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
