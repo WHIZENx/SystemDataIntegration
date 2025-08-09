@@ -1,5 +1,5 @@
 {
-  "name": "neon-google-sheets-crud-integration",
+  "name": "system-data-integration",
   "version": "0.0.0",
   "private": true,
   "dependencies": {
@@ -18,11 +18,13 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
+    "dev": "vite",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "vite build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "vite"
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx src --fix"
   },
   "eslintConfig": {
     "extends": [
@@ -47,8 +49,13 @@
     "@types/node": "^24.2.1",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "postcss": "^8.5.6",
     "typescript": "^5.9.2",
     "vite": "^5.1.4"

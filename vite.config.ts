@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3002,
       host: true,
-      open: false,
+      open: true,
       strictPort: true,
       hmr: {
         overlay: true,

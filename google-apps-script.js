@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
 /**
  * Google Apps Script Backend for React CRUD Application
  * 

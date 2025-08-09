@@ -64,10 +64,10 @@ REACT_APP_NEON_API_KEY=your_api_key
 ### Local Development
 
 1. Clone the repository
-2. Install dependencies: `npm install`
+2. Install dependencies: `npm install --legacy-peer-deps`
 3. Create `.env` file with necessary configurations (see `.env.example`)
 4. Start the development server: `npm start` or `npm run dev`
-5. Access the application at http://localhost:3000
+5. Access the application at http://localhost:3000 or http://localhost:3002
 
 ## 📚 Usage Examples
 
