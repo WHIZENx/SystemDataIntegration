@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Record } from '../App';
+import { Record } from '../models/record.model';
 
 interface RecordFormProps {
   record: Record | null;

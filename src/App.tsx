@@ -4,16 +4,7 @@ import { NeonAPI } from './services/neonAPI';
 import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
-
-// Define the Record interface
-export interface Record {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  position: string;
-}
+import { Record } from './models/record.model';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);

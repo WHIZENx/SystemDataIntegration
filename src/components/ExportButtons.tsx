@@ -1,5 +1,5 @@
 import React from 'react';
-import { Record } from '../App';
+import { Record } from '../models/record.model';
 import { exportToGoogleSheets, exportToExcel, exportToCSV } from '../utils/exportUtils';
 
 interface ExportButtonsProps {

@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { Record } from '../App';
+import { Record } from '../models/record.model';
 import { GoogleSheetsAPI } from '../services/googleSheetsAPI';
 
 /**

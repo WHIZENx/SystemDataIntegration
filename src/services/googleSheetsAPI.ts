@@ -2,13 +2,8 @@
 // This service handles all CRUD operations with Google Apps Script
 
 import axios, { AxiosResponse } from 'axios';
-import { Record } from '../App';
-
-interface APIResponse {
-  records?: Record[];
-  record?: Record;
-  error?: string;
-}
+import { Record } from '../models/record.model';
+import { APIResponse } from '../models/google-sheet.model';
 
 class GoogleSheetsAPIService {
   private baseURL: string;

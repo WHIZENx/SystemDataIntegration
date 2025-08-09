@@ -2,21 +2,9 @@
 // This service handles all CRUD operations with NEON Database
 
 import axios, { AxiosResponse } from 'axios';
-import { Record } from '../App';
 import { createPool, VercelPool } from '@vercel/postgres';
-
-
-interface NeonAuthResponse {
-  access_token: string;
-  expires_at_millis?: number;
-  error?: string;
-}
-
-interface NeonAPIResponse {
-  data?: any;
-  error?: string;
-  message?: string;
-}
+import { Record } from '../models/record.model';
+import { NeonAuthResponse, NeonAPIResponse } from '../models/neon.model';
 
 class NeonAPIService {
   private apiUrl: string;
