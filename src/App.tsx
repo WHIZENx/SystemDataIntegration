@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   const [searchName, setSearchName] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -39,6 +40,7 @@ const App: React.FC = () => {
     setLoading(true);
     setInit(false);
     setError('');
+    setSuccess('');
     try {
       if (neonAPI.current === 1) {
         const data = await NeonAPI.getAllEmployees();
@@ -64,6 +66,7 @@ const App: React.FC = () => {
 
     setIsSearching(true);
     setError('');
+    setSuccess('');
     try {
       if (neonAPI.current === 1) {
         const data = await NeonAPI.searchEmployees({ name: name.trim() });
@@ -113,6 +116,7 @@ const App: React.FC = () => {
   const handleCreate = async (recordData: Omit<Record, 'id'>): Promise<void> => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       if (neonAPI.current === 1) {
         await NeonAPI.createEmployee(recordData);
@@ -120,6 +124,7 @@ const App: React.FC = () => {
         await GoogleSheetsAPI.createRecord(recordData);
       }
       await loadRecords(); // Refresh the list
+      setSuccess('Record created successfully');
     } catch (err) {
       setError('Failed to create record: ' + (err as Error).message);
     } finally {
@@ -130,6 +135,7 @@ const App: React.FC = () => {
   const handleUpdate = async (id: string, recordData: Omit<Record, 'id'>): Promise<void> => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       if (neonAPI.current === 1) {
         await NeonAPI.updateEmployee(id, recordData);
@@ -138,6 +144,7 @@ const App: React.FC = () => {
       }
       setEditingRecord(null);
       await loadRecords(); // Refresh the list
+      setSuccess('Record updated successfully');
     } catch (err) {
       setError('Failed to update record: ' + (err as Error).message);
     } finally {
@@ -152,6 +159,7 @@ const App: React.FC = () => {
     
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       if (neonAPI.current === 1) {
         await NeonAPI.deleteEmployee(id);
@@ -159,6 +167,7 @@ const App: React.FC = () => {
         await GoogleSheetsAPI.deleteRecord(id);
       }
       await loadRecords(); // Refresh the list
+      setSuccess('Record deleted successfully');
     } catch (err) {
       setError('Failed to delete record: ' + (err as Error).message);
     } finally {
@@ -176,8 +185,8 @@ const App: React.FC = () => {
 
   const handleCreateEmployeeTable = async (): Promise<void> => {
     try {
-      const result = await NeonAPI.createDbEmployee();
-      console.log(result);
+      await NeonAPI.createDbEmployee();
+      setSuccess('Employee table created successfully');
     } catch (err) {
       setError('Failed to create employee table: ' + (err as Error).message);
     }
@@ -193,8 +202,16 @@ const App: React.FC = () => {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between">
+            <span>{error}</span>
+            <span className="cursor-pointer text-gray-600 hover:text-gray-800" onClick={() => setError('')}>x</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded flex items-center justify-between">
+            <span>{success}</span>
+            <span className="cursor-pointer text-gray-600 hover:text-gray-800" onClick={() => setSuccess('')}>x</span>
           </div>
         )}
 
