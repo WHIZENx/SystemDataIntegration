@@ -6,6 +6,8 @@ import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
+import { firebaseService } from './services/firebaseService';
+import { AUTO_SEARCH_DELAY, IS_AUTO_SEARCH } from './constants/default.constant';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -19,7 +21,7 @@ const App: React.FC = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isExportingExcel, setIsExportingExcel] = useState<boolean>(false);
   const [isExportingCSV, setIsExportingCSV] = useState<boolean>(false);
-  // const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiType = useRef(ApiType.GOOGLE_SHEETS);
 
@@ -36,6 +38,9 @@ const App: React.FC = () => {
     try {
       if (apiType.current === ApiType.NEON) {
         const data = await NeonAPI.getAllEmployees();
+        setRecords(data);
+      } else if (apiType.current === ApiType.FIREBASE) {
+        const data = await firebaseService.getAllRecords();
         setRecords(data);
       } else {
         const data = await GoogleSheetsAPI.getAllRecords();
@@ -63,6 +68,9 @@ const App: React.FC = () => {
       if (apiType.current === ApiType.NEON) {
         const data = await NeonAPI.searchEmployees({ name: name.trim() });
         setRecords(data);
+      } else if (apiType.current === ApiType.FIREBASE) {
+        const data = await firebaseService.findRecordsByField('name', name.trim());
+        setRecords(data);
       } else {
         // For Google Sheets, filter locally
         const allData = await GoogleSheetsAPI.getAllRecords();
@@ -82,15 +90,17 @@ const App: React.FC = () => {
     const value = event.target.value;
     setSearchName(value);
     
-    // Clear previous timeout
-    // if (searchTimeoutRef.current) {
-    //   clearTimeout(searchTimeoutRef.current);
-    // }
-    
-    // Debounce search - search after user stops typing for 500ms
-    // searchTimeoutRef.current = setTimeout(() => {
-    //   searchEmployees(value);
-    // }, 500);
+    if (IS_AUTO_SEARCH) {
+      // Clear previous timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      
+      // Debounce search - search after user stops typing for 500ms
+      searchTimeoutRef.current = setTimeout(() => {
+        searchEmployees(value);
+      }, AUTO_SEARCH_DELAY);
+    }
   };
 
   const handleSearchSubmit = (event: React.FormEvent): void => {
@@ -112,6 +122,8 @@ const App: React.FC = () => {
     try {
       if (apiType.current === ApiType.NEON) {
         await NeonAPI.createEmployee(recordData);
+      } else if (apiType.current === ApiType.FIREBASE) {
+        await firebaseService.createRecord(recordData);
       } else {
         await GoogleSheetsAPI.createRecord(recordData);
       }
@@ -124,13 +136,15 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpdate = async (id: string, recordData: Omit<Record, 'id'>): Promise<void> => {
+  const handleUpdate = async (id: number, recordData: Omit<Record, 'id'>): Promise<void> => {
     setLoading(true);
     setError('');
     setSuccess('');
     try {
       if (apiType.current === ApiType.NEON) {
         await NeonAPI.updateEmployee(id, recordData);
+      } else if (apiType.current === ApiType.FIREBASE) {
+        await firebaseService.updateRecord(id, recordData);
       } else {
         await GoogleSheetsAPI.updateRecord(id, recordData);
       }
@@ -144,7 +158,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string): Promise<void> => {
+  const handleDelete = async (id: number): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this record?')) {
       return;
     }
@@ -155,6 +169,8 @@ const App: React.FC = () => {
     try {
       if (apiType.current === ApiType.NEON) {
         await NeonAPI.deleteEmployee(id);
+      } else if (apiType.current === ApiType.FIREBASE) {
+        await firebaseService.deleteRecord(id);
       } else {
         await GoogleSheetsAPI.deleteRecord(id);
       }

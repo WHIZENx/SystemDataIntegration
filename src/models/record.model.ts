@@ -1,6 +1,6 @@
 // Define the Record interface
 export interface Record {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;

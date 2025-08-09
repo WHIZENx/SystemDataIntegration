@@ -22,7 +22,7 @@ class GoogleSheetsAPIService {
     // Mock data for development
     this.mockData = [
       {
-        id: '1',
+        id: 1,
         name: 'John Doe',
         email: 'john.doe@company.com',
         phone: '+1-555-0123',
@@ -30,7 +30,7 @@ class GoogleSheetsAPIService {
         position: 'Senior Developer'
       },
       {
-        id: '2',
+        id: 2,
         name: 'Jane Smith',
         email: 'jane.smith@company.com',
         phone: '+1-555-0124',
@@ -38,7 +38,7 @@ class GoogleSheetsAPIService {
         position: 'Marketing Manager'
       },
       {
-        id: '3',
+        id: 3,
         name: 'Mike Johnson',
         email: 'mike.johnson@company.com',
         phone: '+1-555-0125',
@@ -46,7 +46,7 @@ class GoogleSheetsAPIService {
         position: 'Sales Representative'
       },
       {
-        id: '4',
+        id: 4,
         name: 'Sarah Wilson',
         email: 'sarah.wilson@company.com',
         phone: '+1-555-0126',
@@ -54,7 +54,7 @@ class GoogleSheetsAPIService {
         position: 'HR Specialist'
       },
       {
-        id: '5',
+        id: 5,
         name: 'David Brown',
         email: 'david.brown@company.com',
         phone: '+1-555-0127',
@@ -70,8 +70,8 @@ class GoogleSheetsAPIService {
   }
 
   // Generate a unique ID for new records
-  private generateId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  private generateId(): number {
+    return Date.now() + Math.random();
   }
 
   async initSheet() {
@@ -249,7 +249,7 @@ class GoogleSheetsAPIService {
   }
 
   // UPDATE an existing record
-  async updateRecord(id: string, recordData: Omit<Record, 'id'>): Promise<Record> {
+  async updateRecord(id: number, recordData: Omit<Record, 'id'>): Promise<Record> {
     if (this.useMockData) {
       await this.delay(1000);
       const index = this.mockData.findIndex(record => record.id === id);
@@ -297,7 +297,7 @@ class GoogleSheetsAPIService {
   }
 
   // DELETE a record
-  async deleteRecord(id: string): Promise<Record> {
+  async deleteRecord(id: number): Promise<Record> {
     if (this.useMockData) {
       await this.delay(800);
       const index = this.mockData.findIndex(record => record.id === id);
@@ -341,7 +341,7 @@ class GoogleSheetsAPIService {
   }
 
   // GET a single record by ID
-  async getRecord(id: string): Promise<Record> {
+  async getRecord(id: number): Promise<Record> {
     if (this.useMockData) {
       await this.delay(500);
       const record = this.mockData.find(record => record.id === id);

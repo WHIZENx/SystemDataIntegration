@@ -4,7 +4,7 @@ import { Record } from '../models/record.model';
 interface RecordListProps {
   records: Record[];
   onEdit: (record: Record) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   loading: boolean;
 }
 
@@ -91,7 +91,7 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
                       </svg>
                     </button>
                     <button
-                      onClick={() => onDelete(record.id || index.toString())}
+                      onClick={() => onDelete(record.id || index)}
                       disabled={loading}
                       className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
                       title="Delete record"

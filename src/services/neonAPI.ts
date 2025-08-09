@@ -5,6 +5,7 @@ import axios, { AxiosResponse } from 'axios';
 import { createPool, VercelPool } from '@vercel/postgres';
 import { Record } from '../models/record.model';
 import { NeonAuthResponse, NeonAPIResponse } from '../models/neon.model';
+import { TABLE_NAME } from '../constants/default.constant';
 
 class NeonAPIService {
   private apiUrl: string;
@@ -46,7 +47,7 @@ class NeonAPIService {
     if (!this.db) {
       throw new Error('Database connection is not initialized');
     }
-    return await this.db.sql`CREATE TABLE IF NOT EXISTS "employees" ("id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "employees_id_seq"),"name" TEXT,"email" TEXT,"phone" TEXT,"department" TEXT,"position" TEXT)`;
+    return await this.db.sql`CREATE TABLE IF NOT EXISTS "${TABLE_NAME}" ("id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "${TABLE_NAME}_id_seq"),"name" TEXT,"email" TEXT,"phone" TEXT,"department" TEXT,"position" TEXT)`;
   };
 
   /**
@@ -162,7 +163,7 @@ class NeonAPIService {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'POST',
-        '/employees',
+        `/${TABLE_NAME}`,
         employeeData
       );
 
@@ -184,7 +185,7 @@ class NeonAPIService {
     try {
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
-        '/employees'
+        `/${TABLE_NAME}`
       );
 
       return result || [];
@@ -201,7 +202,7 @@ class NeonAPIService {
     try {
       const result = await this.makeAuthenticatedRequest<Record>(
         'GET',
-        `/employees/${id}`
+        `/${TABLE_NAME}/${id}`
       );
 
       if (!result) {
@@ -218,11 +219,11 @@ class NeonAPIService {
   /**
    * UPDATE - Update an existing employee record
    */
-  async updateEmployee(id: string, employeeData: Omit<Record, 'id'>): Promise<Record> {
+  async updateEmployee(id: number, employeeData: Omit<Record, 'id'>): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'PATCH',
-        `/employees?id=eq.${id}`,
+        `/${TABLE_NAME}?id=eq.${id}`,
         employeeData
       );
 
@@ -240,11 +241,11 @@ class NeonAPIService {
   /**
    * DELETE - Remove an employee record
    */
-  async deleteEmployee(id: string): Promise<Record> {
+  async deleteEmployee(id: number): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'DELETE',
-        `/employees?id=eq.${id}`
+        `/${TABLE_NAME}?id=eq.${id}`
       );
 
       if (result.error) {
@@ -275,7 +276,7 @@ class NeonAPIService {
       //   }
       // });
 
-      const endpoint = `/employees?name=ilike.%${criteria.name}%`;
+      const endpoint = `/${TABLE_NAME}?name=ilike.%${criteria.name}%`;
       
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
