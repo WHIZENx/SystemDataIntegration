@@ -3,6 +3,8 @@
 
 import axios, { AxiosResponse } from 'axios';
 import { Record } from '../App';
+import { createPool, VercelPool } from '@vercel/postgres';
+
 
 interface NeonAuthResponse {
   access_token: string;
@@ -26,6 +28,7 @@ class NeonAPIService {
   private authUserId: string;
   private currentAccessToken: string | null = null;
   private tokenExpiresAt: number = 0;
+  private db: VercelPool | null = null;
 
   constructor() {
     // Load configuration from environment variables
@@ -37,10 +40,26 @@ class NeonAPIService {
     this.refreshToken = process.env.REACT_APP_NEON_REFRESH_TOKEN || '';
     this.authUserId = process.env.REACT_APP_NEON_AUTH_USER_ID || '';
 
+    if (process.env.REACT_APP_DB_URL) {
+      this.db = createPool({
+        connectionString: process.env.REACT_APP_DB_URL,
+      });
+    }
+
     if (!this.apiUrl || !this.authUrl) {
       console.warn('NEON API configuration is incomplete. Some features may not work.');
     }
   }
+  
+  /**
+   * Create the 'employees' table if it doesn't exist
+   */
+  createDbEmployee = async () => {
+    if (!this.db) {
+      throw new Error('Database connection is not initialized');
+    }
+    return await this.db.sql`CREATE TABLE IF NOT EXISTS "employees" ("id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "employees_id_seq"),"name" TEXT,"email" TEXT,"phone" TEXT,"department" TEXT,"position" TEXT)`;
+  };
 
   /**
    * Get a fresh access token from NEON Auth API

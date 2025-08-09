@@ -174,12 +174,22 @@ const App: React.FC = () => {
     setEditingRecord(null);
   };
 
+  const handleCreateEmployeeTable = async (): Promise<void> => {
+    try {
+      const result = await NeonAPI.createDbEmployee();
+      console.log(result);
+    } catch (err) {
+      setError('Failed to create employee table: ' + (err as Error).message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{neonAPI.current === 1 ? 'NEON Database' : 'Google Sheets'} CRUD</h1>
-          <p className="mt-2 text-gray-600">Manage your data with Create, Read, Update, Delete operations</p>
+          <p className="mt-2 text-gray-600">Manage your data with Create, Read, Update, Delete operations
+          <a className="ml-2 text-blue-600 hover:text-blue-800 underline cursor-pointer" onClick={handleCreateEmployeeTable}>Create Employee table</a></p>
         </div>
 
         {error && (
