@@ -1,70 +1,118 @@
-# Getting Started with Create React App
+# Employee Management System with Dual Backend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, responsive employee management application built with React and TypeScript that supports two different backends:
+1. Google Sheets (using Google Apps Script as backend)
+2. Neon Database (using a custom API service)
 
-## Available Scripts
+## 📋 Features
 
-In the project directory, you can run:
+- **Complete CRUD Operations**: Create, read, update, and delete employee records
+- **Search Functionality**: Search for employees by name
+- **Export Capabilities**: Export data to Excel or CSV formats
+- **Dual Backend Support**: Switch between Google Sheets API and Neon Database
+- **Responsive UI**: Modern interface built with Tailwind CSS
 
-### `npm start`
+## 🧩 Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Frontend (React/TypeScript)
+- Built with React 19 and TypeScript
+- Styled with Tailwind CSS
+- Export functionality using xlsx library
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Backend Options
 
-### `npm test`
+#### 1. Google Sheets API
+- Backend implementation using Google Apps Script
+- Provides REST API endpoints for CRUD operations
+- Data stored in Google Sheets
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### 2. Neon Database
+- Custom API service implementation for PostgreSQL database
+- Authentication with token refresh mechanism
+- Environment variables for configuration
 
-### `npm run build`
+## 🔧 Employee Data Structure
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Each employee record contains:
+- `id`: Unique identifier
+- `name`: Employee's full name
+- `email`: Employee's email address
+- `phone`: Employee's phone number
+- `department`: Department name
+- `position`: Job title/position
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🚀 Setup Instructions
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Google Sheets Backend Setup
 
-### `npm run eject`
+1. Create a new Google Sheet
+2. Set up sheet with headers: ID, Name, Email, Phone, Department, Position
+3. Create a new Google Apps Script project (Tools > Script Editor)
+4. Copy the content from `google-apps-script.js` into the Script Editor
+5. Replace `SHEET_ID` and `SHEET_NAME` variables with your actual Google Sheet details
+6. Deploy as Web App with execute permissions set to "Anyone"
+7. Copy the Web App URL to your `.env` file
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Neon Database Setup
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Set the following environment variables in `.env` file:
+```
+REACT_APP_NEON_API_URL=your_neon_api_url
+REACT_APP_NEON_API_KEY=your_api_key
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Local Development
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Create `.env` file with necessary configurations (see `.env.example`)
+4. Start the development server: `npm start` or `npm run dev`
+5. Access the application at http://localhost:3000
 
-## Learn More
+## 📚 Usage Examples
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Google Sheets API
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```typescript
+import { GoogleSheetsAPI } from './services/googleSheetsAPI';
 
-### Code Splitting
+// Get all records
+const records = await GoogleSheetsAPI.getAllRecords();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+// Create new record
+const newRecord = await GoogleSheetsAPI.createRecord({
+  name: 'John Doe',
+  email: 'john@example.com',
+  phone: '555-0100',
+  department: 'Engineering',
+  position: 'Developer'
+});
+```
 
-### Analyzing the Bundle Size
+### Neon API
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```typescript
+import { NeonAPI } from './services/neonAPI';
 
-### Making a Progressive Web App
+// Get all employees
+const employees = await NeonAPI.getAllEmployees();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+// Create new employee
+const newEmployee = await NeonAPI.createEmployee({
+  name: 'Jane Smith',
+  email: 'jane@example.com',
+  phone: '555-0200',
+  department: 'Marketing',
+  position: 'Manager'
+});
+```
 
-### Advanced Configuration
+## 🛠 Available Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- `npm start` / `npm run dev`: Start development server
+- `npm run build`: Create production build
+- `npm test`: Run tests
 
-### Deployment
+## 📄 License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.
