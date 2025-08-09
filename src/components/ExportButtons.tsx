@@ -1,8 +1,10 @@
 import React from 'react';
 import { Record } from '../models/record.model';
 import { exportToGoogleSheets, exportToExcel, exportToCSV } from '../utils/exportUtils';
+import { ApiType } from '../enums/api-type.enum';
 
 interface ExportButtonsProps {
+  apiType: ApiType;
   records: Record[];
   loading: boolean;
   isExporting: boolean;
@@ -16,6 +18,7 @@ interface ExportButtonsProps {
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
+  apiType,
   records,
   loading,
   isExporting,
@@ -89,14 +92,14 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   
   return (
     <div className="flex gap-2">
-      <button
+      {apiType !== ApiType.GOOGLE_SHEETS && <button
         onClick={handleExportToSheets}
         className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
         disabled={loading || isExporting || records.length === 0}
         title="Export to Google Sheets"
       >
         {isExporting ? 'Exporting...' : 'Export to Sheets'}
-      </button>
+      </button>}
       <button
         onClick={handleExportToExcel}
         className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"

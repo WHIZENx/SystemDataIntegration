@@ -74,6 +74,26 @@ class GoogleSheetsAPIService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
 
+  async initSheet() {
+    try {
+      await axios.post(
+        this.baseURL,
+        {
+          action: 'init',
+        },
+        {
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+          timeout: 60000, // Longer timeout for batch operations
+        }
+      );
+    } catch (error) {
+      console.error('Error fetching records:', error);
+      throw new Error('Failed to fetch records from Google Sheets');
+    }
+  }
+
   // GET all records
   async getAllRecords(): Promise<Record[]> {
     if (this.useMockData) {

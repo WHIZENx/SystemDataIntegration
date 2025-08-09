@@ -5,6 +5,7 @@ import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
 import { Record } from './models/record.model';
+import { ApiType } from './enums/api-type.enum';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -20,7 +21,7 @@ const App: React.FC = () => {
   const [isExportingCSV, setIsExportingCSV] = useState<boolean>(false);
   // const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const neonAPI = useRef(1);
+  const apiType = useRef(ApiType.GOOGLE_SHEETS);
 
   // Load records on component mount
   useEffect(() => {
@@ -33,7 +34,7 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (neonAPI.current === 1) {
+      if (apiType.current === ApiType.NEON) {
         const data = await NeonAPI.getAllEmployees();
         setRecords(data);
       } else {
@@ -59,7 +60,7 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (neonAPI.current === 1) {
+      if (apiType.current === ApiType.NEON) {
         const data = await NeonAPI.searchEmployees({ name: name.trim() });
         setRecords(data);
       } else {
@@ -109,7 +110,7 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (neonAPI.current === 1) {
+      if (apiType.current === ApiType.NEON) {
         await NeonAPI.createEmployee(recordData);
       } else {
         await GoogleSheetsAPI.createRecord(recordData);
@@ -128,7 +129,7 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (neonAPI.current === 1) {
+      if (apiType.current === ApiType.NEON) {
         await NeonAPI.updateEmployee(id, recordData);
       } else {
         await GoogleSheetsAPI.updateRecord(id, recordData);
@@ -152,7 +153,7 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (neonAPI.current === 1) {
+      if (apiType.current === ApiType.NEON) {
         await NeonAPI.deleteEmployee(id);
       } else {
         await GoogleSheetsAPI.deleteRecord(id);
@@ -175,11 +176,20 @@ const App: React.FC = () => {
   };
 
   const handleCreateEmployeeTable = async (): Promise<void> => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
     try {
-      await NeonAPI.createDbEmployee();
+      if (apiType.current === ApiType.NEON) {
+        await NeonAPI.createDbEmployee();
+      } else {
+        await GoogleSheetsAPI.initSheet();
+      }
       setSuccess('Employee table created successfully');
     } catch (err) {
       setError('Failed to create employee table: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -187,7 +197,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{neonAPI.current === 1 ? 'NEON Database' : 'Google Sheets'} CRUD</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{apiType.current === ApiType.NEON ? 'NEON Database' : 'Google Sheets'} CRUD</h1>
           <p className="mt-2 text-gray-600">Manage your data with Create, Read, Update, Delete operations
           <a className="ml-2 text-blue-600 hover:text-blue-800 underline cursor-pointer" onClick={handleCreateEmployeeTable}>Create Employee table</a></p>
         </div>
@@ -233,7 +243,8 @@ const App: React.FC = () => {
                 <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
                   <h2 className="text-lg font-medium text-gray-900">Records ({records.length})</h2>
                   <div className="flex gap-2">
-                    <ExportButtons 
+                    <ExportButtons
+                      apiType={apiType.current}
                       records={records}
                       loading={loading}
                       isExporting={isExporting}
