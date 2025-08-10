@@ -35,8 +35,10 @@ const App: React.FC = () => {
   // Initialize theme based on localStorage when app loads
   useEffect(() => {
     if (darkMode) {
+      document.body.classList.add('dark');
       document.documentElement.classList.add('dark');
     } else {
+      document.body.classList.remove('dark');
       document.documentElement.classList.remove('dark');
     }
   }, []);
@@ -363,7 +365,7 @@ const App: React.FC = () => {
                   placeholder="Search by name..."
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
-                  className="flex-grow px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full flex-grow px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button 
                   type="submit" 
@@ -382,7 +384,7 @@ const App: React.FC = () => {
               </form>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               {/* Export Buttons */}
               <ExportButtons 
                 apiType={apiType}
