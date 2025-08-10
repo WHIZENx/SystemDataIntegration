@@ -88,7 +88,7 @@ const App: React.FC = () => {
   };
 
   const searchEmployees = async (name: string): Promise<void> => {
-    if (!name.trim()) {
+    if (!name.trim() || records.length === 0) {
       // If search is empty, load all records
       await loadRecords(apiType);
       return;
@@ -154,7 +154,7 @@ const App: React.FC = () => {
     searchEmployees(searchName);
   };
 
-  const _clearSearch = (): void => {
+  const clearSearch = (): void => {
     setSearchName('');
     loadRecords(apiType);
   };
@@ -367,11 +367,18 @@ const App: React.FC = () => {
                 />
                 <button 
                   type="submit" 
-                  className="bg-blue-500 text-white px-6 py-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-blue-300"
+                  className={`bg-blue-500 text-white px-6 py-2 ${IS_AUTO_SEARCH ? 'rounded-r-md' : ''} hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-blue-300`}
                   disabled={loading}
                 >
                   Search
                 </button>
+                {!IS_AUTO_SEARCH && <button 
+                  onClick={clearSearch}
+                  className="bg-red-500 text-white px-6 py-2 rounded-r-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-700 disabled:bg-red-300"
+                  disabled={loading}
+                >
+                  Clear
+                </button>}
               </form>
             </div>
 
