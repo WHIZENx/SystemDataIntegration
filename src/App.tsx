@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios, { CancelTokenSource } from 'axios';
 import { GoogleSheetsAPI } from './services/googleSheetsAPI';
 import { NeonAPI } from './services/neonAPI';
 import RecordForm from './components/RecordForm';
@@ -47,24 +48,39 @@ const App: React.FC = () => {
     }
   }, [activePage]);
 
+  // Create a ref to store the current cancel token
+  const cancelTokenRef = useRef<CancelTokenSource | null>(null);
+
   const loadRecords = async (loadApiType: ApiType): Promise<void> => {
+    // Cancel any ongoing request
+    if (cancelTokenRef.current) {
+      cancelTokenRef.current.cancel('Operation cancelled due to new request');
+    }
+    
+    // Create a new cancel token
+    cancelTokenRef.current = axios.CancelToken.source();
+    const cancelToken = cancelTokenRef.current.token;
+    
     setLoading(true);
     setInit(false);
     setError('');
     setSuccess('');
     try {
       if (loadApiType === ApiType.NEON) {
-        const data = await NeonAPI.getAllEmployees();
+        const data = await NeonAPI.getAllEmployees(cancelToken);
         setRecords(data);
       } else if (loadApiType === ApiType.FIREBASE) {
         const data = await firebaseService.getAllRecords();
         setRecords(data);
       } else {
-        const data = await GoogleSheetsAPI.getAllRecords();
+        const data = await GoogleSheetsAPI.getAllRecords(cancelToken);
         setRecords(data);
       }
-    } catch (err) {
-      setError('Failed to load records: ' + (err as Error).message);
+    } catch (err: any) {
+      // Don't show error when request was intentionally cancelled
+      if (!axios.isCancel(err)) {
+        setError('Failed to load records: ' + err.message);
+      }
     } finally {
       setLoading(false);
       setInit(true);
@@ -256,16 +272,25 @@ const App: React.FC = () => {
   
   // Handle navigation between pages
   const handleNavigate = (page: string) => {
+    // Cancel any ongoing request when navigating away
+    if (cancelTokenRef.current) {
+      cancelTokenRef.current.cancel('Operation cancelled due to navigation');
+      cancelTokenRef.current = null;
+    }
     setActivePage(page);
   };
 
-  const onSetApiType = (loadApiType: ApiType) => {
-    setApiType(loadApiType);
-    setError('');
-    setSuccess('');
-    setLoading(true);
-    setRecords([]);
-    loadRecords(loadApiType);
+  const onSetApiType = (newApiType: ApiType) => {
+    if (apiType !== newApiType) {
+      // Cancel any ongoing request when switching API type
+      if (cancelTokenRef.current) {
+        cancelTokenRef.current.cancel('Operation cancelled due to API type switch');
+        cancelTokenRef.current = null;
+      }
+      setApiType(newApiType);
+      setActivePage('records');
+      loadRecords(newApiType);
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
 // NEON Database API Service
 // This service handles all CRUD operations with NEON Database
 
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, CancelToken } from 'axios';
 import { createPool, VercelPool } from '@vercel/postgres';
 import { Record } from '../models/record.model';
 import { NeonAuthResponse, NeonAPIResponse } from '../models/neon.model';
@@ -101,11 +101,16 @@ class NeonAPIService {
 
   /**
    * Make an authenticated request to NEON API
+   * @param method HTTP method to use
+   * @param endpoint API endpoint
+   * @param data Optional data to send with request
+   * @param cancelToken Optional axios CancelToken to cancel the request
    */
   private async makeAuthenticatedRequest<T>(
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     endpoint: string,
-    data?: any
+    data?: any,
+    cancelToken?: CancelToken
   ): Promise<T> {
     const accessToken = await this.getAccessToken();
     
@@ -120,10 +125,17 @@ class NeonAPIService {
           'Authorization': `Bearer ${accessToken}`,
         },
         timeout: 30000,
+        cancelToken: cancelToken, // Use cancelToken for request cancellation
       });
 
       return response.data;
     } catch (error: any) {
+      // Check if the request was cancelled
+      if (axios.isCancel(error)) {
+        console.log('NEON API request was cancelled:', error.message);
+        throw error; // Re-throw the cancellation error
+      }
+      
       console.error(`NEON API ${method} ${endpoint} failed:`, error);
       
       if (error.response?.status === 401) {
@@ -142,6 +154,7 @@ class NeonAPIService {
             'Authorization': `Bearer ${newAccessToken}`,
           },
           timeout: 30000,
+          cancelToken: cancelToken, // Use cancelToken for retry request as well
         });
         
         return retryResponse.data;
@@ -181,15 +194,22 @@ class NeonAPIService {
   /**
    * READ - Get all employee records
    */
-  async getAllEmployees(): Promise<Record[]> {
+  async getAllEmployees(cancelToken?: CancelToken): Promise<Record[]> {
     try {
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
-        `/${TABLE_NAME}`
+        `/${TABLE_NAME}`,
+        undefined,
+        cancelToken
       );
 
       return result || [];
-    } catch (error) {
+    } catch (error: any) {
+      // Check if this error was caused by cancellation
+      if (axios.isCancel(error)) {
+        console.log('Request was cancelled:', error.message);
+        throw error; // Re-throw the cancellation error
+      }
       console.error('Error fetching employees:', error);
       throw new Error('Failed to fetch employees from NEON Database');
     }

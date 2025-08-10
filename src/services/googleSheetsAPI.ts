@@ -1,7 +1,7 @@
 // Google Sheets API Service
 // This service handles all CRUD operations with Google Apps Script
 
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, CancelToken } from 'axios';
 import { Record } from '../models/record.model';
 import { APIResponse } from '../models/google-sheet.model';
 
@@ -95,7 +95,7 @@ class GoogleSheetsAPIService {
   }
 
   // GET all records
-  async getAllRecords(): Promise<Record[]> {
+  async getAllRecords(cancelToken?: CancelToken): Promise<Record[]> {
     if (this.useMockData) {
       await this.delay(800);
       return [...this.mockData];
@@ -109,11 +109,17 @@ class GoogleSheetsAPIService {
             'Content-Type': 'text/plain',
           },
           timeout: 30000,
+          cancelToken: cancelToken, // Use axios cancelToken
         }
       );
 
       return response.data.records || [];
-    } catch (error) {
+    } catch (error: any) {
+      // Check if the request was cancelled
+      if (axios.isCancel(error)) {
+        console.log('Request was cancelled:', error.message);
+        throw error; // Re-throw the cancellation error
+      }
       console.error('Error fetching records:', error);
       throw new Error('Failed to fetch records from Google Sheets');
     }

@@ -57,7 +57,6 @@ export class AppwriteStorageService {
   async getAllImages(): Promise<StorageImage[]> {
     try {
       const result = await storage.listFiles(this.bucketId);
-      console.log('Appwrite Storage images:', result);
       
       const imagesPromises = result.files.map(async (file) => {
         const url = await this.getImageUrl(file.$id);
