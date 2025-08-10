@@ -8,11 +8,12 @@ import {
   orderByChild, 
   equalTo,
   DatabaseReference,
-  DataSnapshot 
+  DataSnapshot,
 } from 'firebase/database';
 import { db } from '../config/firebase.config';
 import { Record } from '../models/record.model';
-import { TABLE_NAME } from '../constants/default.constant';
+import { DEFAULT_QUERY_TYPE, TABLE_NAME } from '../constants/default.constant';
+import { QUERY_TYPE } from '../enums/query-type.enum';
 
 // Collection name in Firebase Realtime Database
 const RECORDS_COLLECTION = TABLE_NAME;
@@ -119,25 +120,49 @@ export class FirebaseService {
    * Find records by a specific field
    * @param field Field name to search
    * @param value Value to match
+   * @param matchType Match type - 'exact' for exact match or 'contains' for substring search
    * @returns Promise with matching records array
    */
-  async findRecordsByField(field: keyof Record, value: string): Promise<Record[]> {
-    const recordsQuery = query(
-      this.recordsRef,
-      orderByChild(field),
-      equalTo(value)
-    );
-    
-    const snapshot = await get(recordsQuery);
-    const records: Record[] = [];
-    
-    if (snapshot.exists()) {
-      snapshot.forEach((childSnapshot: DataSnapshot) => {
-        records.push(childSnapshot.val() as Record);
-      });
+  async findRecordsByField(field: keyof Record, value: string, matchType = DEFAULT_QUERY_TYPE): Promise<Record[]> {
+    if (matchType === QUERY_TYPE.EXACT) {
+      // For exact matching, use Firebase's equalTo operator
+      const recordsQuery = query(
+        this.recordsRef,
+        orderByChild(field),
+        equalTo(value)
+      );
+      
+      const snapshot = await get(recordsQuery);
+      const records: Record[] = [];
+      
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot: DataSnapshot) => {
+          records.push(childSnapshot.val() as Record);
+        });
+      }
+      
+      return records;
+    } else {
+      // For substring/contains matching, we need to retrieve a broader set and filter client-side
+      // First, get all records (or optimize by getting records that might contain the substring)
+      const snapshot = await get(this.recordsRef);
+      const records: Record[] = [];
+      
+      if (snapshot.exists()) {
+        const lowerCaseValue = value.toLowerCase();
+        
+        snapshot.forEach((childSnapshot: DataSnapshot) => {
+          const record = childSnapshot.val() as Record;
+          const fieldValue = String(record[field] || '').toLowerCase();
+          
+          if (fieldValue.includes(lowerCaseValue)) {
+            records.push(record);
+          }
+        });
+      }
+      
+      return records;
     }
-    
-    return records;
   }
 
   /**

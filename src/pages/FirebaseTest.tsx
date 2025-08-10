@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { firebaseService } from '../services/firebaseService';
 import { Record } from '../models/record.model';
+import { DEFAULT_QUERY_TYPE } from '../constants/default.constant';
+import { QUERY_TYPE } from '../enums/query-type.enum';
 
 /**
  * A test page to directly test Firebase CRUD operations
@@ -22,6 +24,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   }, [activePage]);
   
   const loadRecords = async () => {
+    setError('');
+    setSuccess('');
     try {
       setLoading(true);
       const allRecords = await firebaseService.getAllRecords();
@@ -38,6 +42,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
   
   const handleCreateRecord = async () => {
+    setError('');
+    setSuccess('');
     const newRecord: Omit<Record, 'id'> = {
       name: `Test User ${Math.floor(Math.random() * 1000)}`,
       email: `test${Math.floor(Math.random() * 1000)}@example.com`,
@@ -65,6 +71,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
   
   const handleGetRecord = async (id: number) => {
+    setError('');
+    setSuccess('');
     try {
       setLoading(true);
       const record = await firebaseService.getRecordById(id);
@@ -88,6 +96,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
   
   const handleUpdateRecord = async (record: Record) => {
+    setError('');
+    setSuccess('');
     // Update a random field
     const updatedRecord = { 
       ...record,
@@ -114,6 +124,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
   
   const handleDeleteRecord = async (id: number) => {
+    setError('');
+    setSuccess('');
     try {
       setLoading(true);
       await firebaseService.deleteRecord(id);
@@ -133,6 +145,8 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
   
   const handleSearch = async () => {
+    setError('');
+    setSuccess('');
     if (!searchField || !searchValue.trim()) {
       setError('Please enter a search field and value');
       return;
@@ -142,15 +156,24 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       setLoading(true);
       const searchResults = await firebaseService.findRecordsByField(
         searchField as keyof Record, 
-        searchValue
+        searchValue,
+        DEFAULT_QUERY_TYPE
       );
       
       setRecords(searchResults);
       if (searchResults.length > 0) {
-        setSuccess(`Found ${searchResults.length} records matching ${searchField}=${searchValue}`);
+        if (DEFAULT_QUERY_TYPE === QUERY_TYPE.CONTAINS) {
+          setSuccess(`Found ${searchResults.length} records containing ${searchField} includes ${searchValue}`);
+        } else {
+          setSuccess(`Found ${searchResults.length} records matching ${searchField} = ${searchValue}`);
+        }
         logSuccess('Search results', searchResults);
       } else {
-        setError(`No records found matching ${searchField}=${searchValue}`);
+        if (DEFAULT_QUERY_TYPE === QUERY_TYPE.CONTAINS) {
+          setError(`No records found containing ${searchField} includes ${searchValue}`);
+        } else {
+          setError(`No records found matching ${searchField} = ${searchValue}`);
+        }
         logError('No search results', { field: searchField, value: searchValue });
       }
     } catch (err) {
@@ -164,6 +187,7 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   
   const handleRunAllTests = async () => {
     setLoading(true);
+    setError('');
     setSuccess('Running all tests...');
     
     try {
@@ -203,7 +227,7 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       }
       
       // 5. Test findRecordsByField
-      const searchResults = await firebaseService.findRecordsByField('name', 'Updated Test User');
+      const searchResults = await firebaseService.findRecordsByField('name', 'Updated Test User', DEFAULT_QUERY_TYPE);
       if (searchResults.length > 0 && searchResults.some(r => r.id === createdRecord.id)) {
         logSuccess('5. findRecordsByField test passed', searchResults);
       } else {
@@ -226,6 +250,7 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       
     } catch (err) {
       const errorMessage = (err as Error).message;
+      setSuccess('');
       setError(`Test failed: ${errorMessage}`);
       logError('Test failure', err);
     } finally {

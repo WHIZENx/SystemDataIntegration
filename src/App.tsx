@@ -11,7 +11,7 @@ import FirebaseTest from './pages/FirebaseTest';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
-import { AUTO_SEARCH_DELAY, IS_AUTO_SEARCH } from './constants/default.constant';
+import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, IS_AUTO_SEARCH } from './constants/default.constant';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -102,7 +102,7 @@ const App: React.FC = () => {
         const data = await NeonAPI.searchEmployees({ name: name.trim() });
         setRecords(data);
       } else if (apiType === ApiType.FIREBASE) {
-        const data = await firebaseService.findRecordsByField('name', name.trim());
+        const data = await firebaseService.findRecordsByField('name', name.trim(), DEFAULT_QUERY_TYPE);
         setRecords(data);
       } else {
         // For Google Sheets, filter locally
@@ -299,7 +299,7 @@ const App: React.FC = () => {
         activePage={activePage} 
         onNavigate={handleNavigate}
         onThemeToggle={toggleTheme}
-        isDarkMode={darkMode}
+        isDarkMode={!darkMode}
       />
       
       <div className="container mx-auto px-4 py-8">
