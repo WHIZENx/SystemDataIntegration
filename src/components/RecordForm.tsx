@@ -19,6 +19,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [prevProfileImage, setPrevProfileImage] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (record) {
@@ -59,25 +61,25 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.email.trim()) {
+    if (!formData.email?.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
 
-    if (!formData.phone.trim()) {
+    if (!formData.phone?.toString().trim()) {
       newErrors.phone = 'Phone is required';
     }
 
-    if (!formData.department.trim()) {
+    if (!formData.department?.trim()) {
       newErrors.department = 'Department is required';
     }
 
-    if (!formData.position.trim()) {
+    if (!formData.position?.trim()) {
       newErrors.position = 'Position is required';
     }
 
@@ -87,6 +89,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
 
   const loadImagePreview = async (fileId: string) => {
     try {
+      setPrevProfileImage(fileId);
       if (fileId) {
         const imageUrl = await appwriteStorageService.viewImage(fileId);
         setImagePreview(imageUrl);
@@ -129,12 +132,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setSubmitting(true);
     
     if (!validateForm()) {
+      setSubmitting(false);
       return;
     }
 
-    let updatedFormData = {...formData};
+    let updatedFormData = {...formData, phone: formData.phone?.toString() || ''};
 
     try {
       // Handle image upload if there's a new image
@@ -145,10 +150,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       }
 
       // Handle image deletion if image was removed and there was a previous image
-      if (!imageFile && !imagePreview && formData.profile_image && record?.profile_image) {
+      if ((prevProfileImage || !imageFile) && prevProfileImage !== updatedFormData.profile_image) {
         // Delete the old image if needed
-        await appwriteStorageService.deleteImage(record.profile_image);
-        updatedFormData.profile_image = '';
+        await appwriteStorageService.deleteImage(prevProfileImage);
       }
 
       // If same old image, just keep the ID
@@ -159,6 +163,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       console.error('Error processing image:', error);
       // Still submit the form without image changes if there's an error
       onSubmit(formData);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -350,21 +356,21 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       <div className="flex space-x-3 pt-4">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || submitting}
           className={`flex-1 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
-            loading 
+            loading || submitting
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
           }`}
         >
-          {!init ? 'Loading...' : loading ? 'Saving...' : (record ? 'Update' : 'Create')}
+          {!init ? 'Loading...' : loading ? 'Saving...' : (record ? submitting ? 'Updating...' : 'Update' : submitting ? 'Creating...' : 'Create')}
         </button>
         
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
-            disabled={loading}
+            disabled={loading || submitting}
             className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
@@ -373,7 +379,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           <button
             type="button"
             onClick={handleReset}
-            disabled={loading}
+            disabled={loading || submitting}
             className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Reset

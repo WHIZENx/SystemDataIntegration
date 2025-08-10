@@ -12,6 +12,7 @@ import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
 import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, IS_AUTO_SEARCH } from './constants/default.constant';
+import { appwriteStorageService } from './services/appwriteStorageService';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -171,6 +172,7 @@ const App: React.FC = () => {
       } else {
         await GoogleSheetsAPI.createRecord(recordData);
       }
+      setEditingRecord(null);
       await loadRecords(apiType); // Refresh the list
       setSuccess('Record created successfully');
     } catch (err) {
@@ -217,6 +219,10 @@ const App: React.FC = () => {
         await firebaseService.deleteRecord(id);
       } else {
         await GoogleSheetsAPI.deleteRecord(id);
+      }
+      const record = records.find((record) => record.id === id);
+      if (record && record.profile_image) {
+        await appwriteStorageService.deleteImage(record.profile_image);
       }
       await loadRecords(apiType); // Refresh the list
       setSuccess('Record deleted successfully');
