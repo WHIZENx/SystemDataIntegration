@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { appwriteStorageService } from '../services/appwriteStorageService';
 import { StorageImage } from '../models/app-write.model';
 import { createAnonymousSession } from '../config/appwrite.config';
+import { AUTO_UPLOAD_DELAY, AUTO_UPLOAD_PROGRESS_DELAY, IS_AUTO_UPLOAD } from '../constants/default.constant';
 
 const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const [images, setImages] = useState<StorageImage[]>([]);
@@ -9,6 +10,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const [error, setError] = useState<string>('');
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load images on component mount
@@ -57,42 +59,70 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
     
+    const file = files[0];
+    setSelectedFile(file);
+    
+    if (IS_AUTO_UPLOAD) {
+      try {
+        setUploading(true);
+        setUploadProgress(10); // Start progress
+        
+        // Simulate progress - in a real app, you'd use Firebase upload progress events
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, AUTO_UPLOAD_PROGRESS_DELAY);
+        
+        // Upload the file
+        await appwriteStorageService.uploadImage(file);
+        
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+        
+        // Refresh the image list
+        await loadImages();
+        
+        // Reset the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+          setSelectedFile(null);
+        }
+      } catch (err) {
+        console.error('Failed to upload image:', err);
+        setError('Failed to upload image. Please try again.');
+      } finally {
+        setUploading(false);
+        setTimeout(() => setUploadProgress(0), AUTO_UPLOAD_DELAY);
+      }
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      console.error('No file selected');
+      return;
+    }
+    const file = selectedFile;
     try {
       setUploading(true);
-      setUploadProgress(10); // Start progress
-      
-      // Simulate progress - in a real app, you'd use Firebase upload progress events
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-      
-      // Upload the file
       await appwriteStorageService.uploadImage(file);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      
-      // Refresh the image list
       await loadImages();
-      
-      // Reset the file input
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+        setSelectedFile(null);
       }
     } catch (err) {
       console.error('Failed to upload image:', err);
       setError('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -117,6 +147,26 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
     }
   };
 
+  // Handle image download
+  const handleDownloadImage = async (image: StorageImage) => {
+    try {
+      // Get download URL from service
+      const downloadUrl = await appwriteStorageService.downloadImage(image.id);
+      
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = image.name || `download-${image.id}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (err) {
+      console.error('Failed to download image:', err);
+      setError('Failed to download image. Please try again.');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 dark:text-white">
       <h1 className="text-2xl font-bold mb-6">Image Gallery</h1>
@@ -136,15 +186,14 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
           />
           
           {/* Upload button - you could use this instead of auto-upload on file select */}
-          {/*
-          <button 
+          {!IS_AUTO_UPLOAD && <button 
             onClick={handleUpload} 
             disabled={!selectedFile || uploading}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
           >
             {uploading ? 'Uploading...' : 'Upload'}
-          </button>
-          */}
+          </button>}
+         
         </div>
         
         {/* Upload progress bar */}
@@ -199,6 +248,15 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
                     <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                   </svg>
                 </a>
+                <button 
+                  onClick={() => handleDownloadImage(image)}
+                  className="bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+                  title="Download image"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
                 <button 
                   onClick={() => handleDeleteImage(image)}
                   className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"

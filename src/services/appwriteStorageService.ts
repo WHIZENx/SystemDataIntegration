@@ -108,6 +108,23 @@ export class AppwriteStorageService {
       throw new Error(`Failed to get image URL: ${error}`);
     }
   }
+
+  /**
+   * Download an image from Appwrite Storage
+   * @param fileId ID of the file to download
+   * @returns Promise with the download URL that triggers browser download
+   */
+  async downloadImage(fileId: string): Promise<string> {
+    try {
+      // Use Appwrite's getFileDownload to get a URL that forces download
+      const downloadUrl = storage.getFileDownload(this.bucketId, fileId).toString();
+      
+      return downloadUrl;
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      throw new Error(`Failed to download image: ${error}`);
+    }
+  }
 }
 
 // Export a singleton instance of the service
