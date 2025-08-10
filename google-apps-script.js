@@ -16,6 +16,18 @@ const SHEET_ID = 'GOOGLE_SHEET_ID'; // Replace this with your actual Sheet ID
 const SHEET_NAME = 'GOOGLE_SHEET_NAME'; // Change this if your sheet has a different name
 
 const COLUMNS = {}; // Add column name and index here ( NAME: INDEX )
+/** Example: COLUMNS = { 
+   ID: 0, 
+   NAME: 1, 
+   EMAIL: 2, 
+   PHONE: 3, 
+   DEPARTMENT: 4, 
+   POSITION: 5, 
+   PROFILE_IMAGE: 6, 
+   STATUS: 7, 
+   CREATED_AT: 8, 
+   UPDATED_AT: 9 
+} */
 
 /**
  * Handle GET requests
