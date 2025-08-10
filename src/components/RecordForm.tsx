@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FormData, FormErrors, RecordFormProps } from '../models/record.model';
+import { appwriteStorageService } from '../services/appwriteStorageService';
 
 const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loading, init }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -15,6 +16,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (record) {
@@ -29,6 +33,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         created_at: record.created_at || new Date().toISOString(),
         updated_at: record.updated_at || new Date().toISOString(),
       });
+      
+      // Load image preview if profile_image exists
+      if (record.profile_image) {
+        loadImagePreview(record.profile_image);
+      }
     } else {
       setFormData({
         name: '',
@@ -41,8 +50,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
+      setImagePreview('');
     }
     setErrors({});
+    setImageFile(null);
   }, [record]);
 
   const validateForm = (): boolean => {
@@ -74,14 +85,81 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const loadImagePreview = async (fileId: string) => {
+    try {
+      if (fileId) {
+        const imageUrl = await appwriteStorageService.viewImage(fileId);
+        setImagePreview(imageUrl);
+      }
+    } catch (error) {
+      console.error('Error loading image preview:', error);
+      setImagePreview('');
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setImageFile(null);
+    setImagePreview('');
+    
+    // Only clear the form data if we're updating the form data directly
+    // Otherwise wait for form submission to handle deletion
+    setFormData(prev => ({
+      ...prev,
+      profile_image: ''
+    }));
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    onSubmit(formData);
+    let updatedFormData = {...formData};
+
+    try {
+      // Handle image upload if there's a new image
+      if (imageFile) {
+        // Upload new image
+        const uploadResult = await appwriteStorageService.uploadImage(imageFile);
+        updatedFormData.profile_image = uploadResult.id;
+      }
+
+      // Handle image deletion if image was removed and there was a previous image
+      if (!imageFile && !imagePreview && formData.profile_image && record?.profile_image) {
+        // Delete the old image if needed
+        await appwriteStorageService.deleteImage(record.profile_image);
+        updatedFormData.profile_image = '';
+      }
+
+      // If same old image, just keep the ID
+      
+      // Submit the updated form data
+      onSubmit(updatedFormData);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      // Still submit the form without image changes if there's an error
+      onSubmit(formData);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
@@ -113,6 +191,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       updated_at: new Date().toISOString(),
     });
     setErrors({});
+    setImageFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -211,6 +294,57 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           placeholder="Enter job position"
         />
         {errors.position && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.position}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="profile_image" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Profile Image
+        </label>
+        <div className="mt-1 flex items-center space-x-4">
+          <div className="flex-shrink-0 h-24 w-24 rounded-md overflow-hidden border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+            {imagePreview ? (
+              <img 
+                src={imagePreview} 
+                alt="Profile preview" 
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col space-y-2">
+            <div>
+              <input
+                type="file"
+                id="profile_image"
+                name="profile_image"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                accept="image/*"
+                className="sr-only"
+              />
+              <label 
+                htmlFor="profile_image"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+              >
+                {imagePreview ? 'Change Image' : 'Upload Image'}
+              </label>
+            </div>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={handleImageRemove}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-red-600 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Remove Image
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex space-x-3 pt-4">

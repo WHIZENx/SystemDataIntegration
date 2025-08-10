@@ -10,7 +10,8 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const [error, setError] = useState<string>('');
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load images on component mount
@@ -61,7 +62,13 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
 
     
     const file = files[0];
-    setSelectedFile(file);
+    setImageFile(file);
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
     
     if (IS_AUTO_UPLOAD) {
       try {
@@ -91,7 +98,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
         // Reset the file input
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
-          setSelectedFile(null);
+          setImagePreview('');
         }
       } catch (err) {
         console.error('Failed to upload image:', err);
@@ -104,11 +111,11 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
+    if (!imagePreview || !imageFile) {
       console.error('No file selected');
       return;
     }
-    const file = selectedFile;
+    const file = imageFile;
     try {
       setUploading(true);
       await appwriteStorageService.uploadImage(file);
@@ -116,7 +123,8 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
 
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
-        setSelectedFile(null);
+        setImageFile(null);
+        setImagePreview('');
       }
     } catch (err) {
       console.error('Failed to upload image:', err);
@@ -186,26 +194,53 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
       {/* Upload section */}
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
         <h2 className="text-xl mb-2 dark:text-gray-200">Upload New Image</h2>
-        
-        <div className="flex flex-col md:flex-row gap-4">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            disabled={uploading}
-            ref={fileInputRef}
-            className="border rounded px-3 py-2 w-full md:w-auto dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-          
-          {/* Upload button - you could use this instead of auto-upload on file select */}
-          {!IS_AUTO_UPLOAD && <button 
-            onClick={handleUpload} 
-            disabled={!selectedFile || uploading}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
-          >
-            {uploading ? 'Uploading...' : 'Upload'}
-          </button>}
-         
+
+        <div className="mt-1 flex items-center space-x-4">
+          <div className="flex-shrink-0 h-24 w-24 rounded-md overflow-hidden border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+            {imagePreview ? (
+              <img 
+                src={imagePreview} 
+                alt="Profile preview" 
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col space-y-2">
+            <div>
+              <input
+                type="file"
+                id="profile_image"
+                name="profile_image"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="sr-only"
+                disabled={uploading}
+              />
+              <label 
+                htmlFor="profile_image"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+              >
+                {imagePreview ? 'Change Image' : 'Upload Image'}
+              </label>
+            </div>
+            {imagePreview && (
+                <button
+                  type="button"
+                  disabled={!imagePreview || uploading}
+                  onClick={handleUpload}
+                  className="inline-flex items-center px-4 py-2 border border-blue-300 dark:border-blue-600 shadow-sm text-sm font-medium rounded-md text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Upload Image
+                </button>
+              )}
+          </div>
         </div>
         
         {/* Upload progress bar */}

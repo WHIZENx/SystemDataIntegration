@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Record } from '../models/record.model';
+import { appwriteStorageService } from '../services/appwriteStorageService';
 
 interface RecordListProps {
   records: Record[];
@@ -8,7 +9,41 @@ interface RecordListProps {
   loading: boolean;
 }
 
+const loadImagePreview = async (fileId: string) => {
+    try {
+      if (fileId) {
+        const imageUrl = await appwriteStorageService.viewImage(fileId);
+        return imageUrl;
+      }
+    } catch (error) {
+      console.error('Error loading image preview:', error);
+    }
+  };
+
 const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, loading }) => {
+  const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
+
+  useEffect(() => {
+    // Load image URLs for all records
+    const loadImages = async () => {
+      const urls: {[key: string]: string} = {};
+      
+      for (const record of records) {
+        if (record.profile_image) {
+          try {
+            const imageUrl = await loadImagePreview(record.profile_image);
+            if (imageUrl) urls[record.profile_image] = imageUrl;
+          } catch (error) {
+            console.error(`Error loading image for record ${record.id}:`, error);
+          }
+        }
+      }
+      
+      setImageUrls(urls);
+    };
+    
+    loadImages();
+  }, [records]);
   if (loading && records.length === 0) {
     return (
       <div className="p-6 text-center">
@@ -65,7 +100,15 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
             {records.map((record, index) => (
               <tr key={record.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-gray-200">{record.profile_image}</div>
+                  {record.profile_image && imageUrls[record.profile_image] ? (
+                    <img src={imageUrls[record.profile_image]} alt="Profile" className="w-16 h-16 rounded-full object-cover"/>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-200">{record.name}</div>
