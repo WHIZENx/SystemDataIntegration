@@ -39,6 +39,9 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Profile Image
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Name
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -62,7 +65,10 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
             {records.map((record, index) => (
               <tr key={record.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{record.name}</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-200">{record.profileImage}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 dark:text-gray-200">{record.name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-200">{record.email}</div>

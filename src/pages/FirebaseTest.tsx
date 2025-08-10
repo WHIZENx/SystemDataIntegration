@@ -49,7 +49,11 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       email: `test${Math.floor(Math.random() * 1000)}@example.com`,
       phone: `+1${Math.floor(Math.random() * 10000000000)}`,
       department: ['HR', 'IT', 'Sales', 'Marketing'][Math.floor(Math.random() * 4)],
-      position: ['Manager', 'Developer', 'Designer', 'Analyst'][Math.floor(Math.random() * 4)]
+      position: ['Manager', 'Developer', 'Designer', 'Analyst'][Math.floor(Math.random() * 4)],
+      profileImage: '',
+      status: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     
     try {
@@ -201,7 +205,11 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
         email: `test${Math.floor(Math.random() * 1000)}@example.com`,
         phone: `+1${Math.floor(Math.random() * 10000000000)}`,
         department: 'Test Department',
-        position: 'Test Position'
+        position: 'Test Position',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       const createdRecord = await firebaseService.createRecord(newRecord);
@@ -367,7 +375,7 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="border rounded px-3 py-2 flex-grow dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded px-3 py-2 flex-grow dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder={`Search by ${searchField}...`}
               />
             </div>

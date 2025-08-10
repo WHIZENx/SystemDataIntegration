@@ -13,6 +13,7 @@ const Navigation: React.FC<NavigationProps> = ({
   onThemeToggle,
   isDarkMode
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-md mb-6">
       <div className="container mx-auto px-4">
@@ -77,7 +78,7 @@ const Navigation: React.FC<NavigationProps> = ({
           
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <button className="mobile-menu-button focus:outline-none">
+            <button className="mobile-menu-button focus:outline-none" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               <svg className="h-6 w-6 text-gray-700 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -86,7 +87,7 @@ const Navigation: React.FC<NavigationProps> = ({
         </div>
         
         {/* Mobile menu */}
-        <div className="mobile-menu hidden md:hidden">
+        <div className={`mobile-menu ${mobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
           <div className="px-2 pt-2 pb-3 space-y-1">
             <button 
               onClick={() => onNavigate('records')}

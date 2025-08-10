@@ -15,6 +15,8 @@
 const SHEET_ID = 'GOOGLE_SHEET_ID'; // Replace this with your actual Sheet ID
 const SHEET_NAME = 'GOOGLE_SHEET_NAME'; // Change this if your sheet has a different name
 
+const COLUMNS = {}; // Add column name and index here ( NAME: INDEX )
+
 /**
  * Handle GET requests
  */
@@ -80,17 +82,30 @@ function generateId() {
  * Convert row to record object
  */
 function rowToRecord(row, rowIndex) {
-  if (!row || row.length < 6) return null;
+  if (!row || row.length < Object.keys(COLUMNS).length) return null;
+
+  const record = {};
+  Object.keys(COLUMNS).forEach(key => {
+    record[key.toLowerCase()] = row[COLUMNS[key]] || '';
+  });
+  record.rowIndex = rowIndex;
   
-  return {
-    id: row[0] || '',
-    name: row[1] || '',
-    email: row[2] || '',
-    phone: row[3] || '',
-    department: row[4] || '',
-    position: row[5] || '',
-    rowIndex: rowIndex
-  };
+  return record;
+}
+
+function recordToRowObject(record, id = undefined) {
+  if (!record || !record.id) return null;
+
+  const row = [];
+  Object.keys(record).forEach(key => {
+    if (key.toLowerCase() === 'id') {
+      row['id'] = id !== undefined ? id : record.id || '';
+    } else {
+      row[key.toLowerCase()] = record[key];
+    }
+  });
+  
+  return row;
 }
 
 /**
@@ -98,13 +113,15 @@ function rowToRecord(row, rowIndex) {
  */
 function recordToRow(record) {
   return [
-    record.id,
-    record.name,
-    record.email,
-    record.phone,
-    record.department,
-    record.position
+    ...recordToRowObject(record)
   ];
+}
+
+/**
+ * Capitalize first letter of a string
+ */
+function capitalize(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
 /**
@@ -168,14 +185,7 @@ function createRecord(recordData) {
     
     const sheet = getSheet();
     
-    const newRecord = {
-      id: generateId(),
-      name: recordData.name,
-      email: recordData.email,
-      phone: recordData.phone || '',
-      department: recordData.department || '',
-      position: recordData.position || ''
-    };
+    const newRecord = recordToRowObject(recordData, generateId());
     
     const row = recordToRow(newRecord);
     sheet.appendRow(row);
@@ -205,25 +215,11 @@ function createMultipleRecords(recordsData) {
     
     recordsData.forEach((recordData) => {
       const id = generateId();
-      const rowData = [
-        id,
-        recordData.name || '',
-        recordData.email || '',
-        recordData.phone || '',
-        recordData.department || '',
-        recordData.position || ''
-      ];
+      const rowData = recordToRow(recordData);
       
       batchData.push(rowData);
       
-      createdRecords.push({
-        id: id,
-        name: recordData.name || '',
-        email: recordData.email || '',
-        phone: recordData.phone || '',
-        department: recordData.department || '',
-        position: recordData.position || ''
-      });
+      createdRecords.push(recordToRowObject(recordData, id));
     });
     
     if (batchData.length > 0) {
@@ -256,17 +252,10 @@ function updateRecord(id, recordData) {
     for (let i = 1; i < data.length; i++) {
       const record = rowToRecord(data[i], i + 1);
       if (record && record.id === id) {
-        const updatedRecord = {
-          id: id,
-          name: recordData.name,
-          email: recordData.email,
-          phone: recordData.phone || '',
-          department: recordData.department || '',
-          position: recordData.position || ''
-        };
+        const updatedRecord = recordToRowObject(recordData, id);
         
         const row = recordToRow(updatedRecord);
-        sheet.getRange(i + 1, 1, 1, 6).setValues([row]);
+        sheet.getRange(i + 1, 1, 1, Object.keys(COLUMNS).length).setValues([row]);
         
         return { record: updatedRecord };
       }
@@ -296,28 +285,14 @@ function modifyMultipleRecords(recordsData) {
       const recordData = recordsData[i]
       const rowDataIndex = data.findIndex((row, index) => index > 0 && Number(row[0]) === Number(recordData.id))
       if (rowDataIndex > -1) {
-        const updatedRecord = {
-          id: recordData.id,
-          name: recordData.name,
-          email: recordData.email,
-          phone: recordData.phone || '',
-          department: recordData.department || '',
-          position: recordData.position || ''
-        };
+        const updatedRecord = recordToRowObject(recordData);
 
         modifyRecords.push(updatedRecord);
         
         const row = recordToRow(updatedRecord);
-        sheet.getRange(rowDataIndex + 1, 1, 1, 6).setValues([row]);
+        sheet.getRange(rowDataIndex + 1, 1, 1, Object.keys(COLUMNS).length).setValues([row]);
       } else {
-        const newRecord = {
-          id: recordData.id,
-          name: recordData.name,
-          email: recordData.email,
-          phone: recordData.phone || '',
-          department: recordData.department || '',
-          position: recordData.position || ''
-        };
+        const newRecord = recordToRowObject(recordData);
 
         modifyRecords.push(newRecord);
         
@@ -366,12 +341,12 @@ function initializeSheet() {
   try {
     const sheet = getSheet();
     
-    const firstRow = sheet.getRange(1, 1, 1, 6).getValues()[0];
-    if (firstRow[0] !== 'ID' || firstRow[1] !== 'Name') {
-      const headers = ['ID', 'Name', 'Email', 'Phone', 'Department', 'Position'];
-      sheet.getRange(1, 1, 1, 6).setValues([headers]);
+    const firstRow = sheet.getRange(1, 1, 1, Object.keys(COLUMNS).length).getValues()[0];
+    if (firstRow[0].toLowerCase() !== Object.keys(COLUMNS)[0].toLowerCase() || firstRow[1].toLowerCase() !== Object.keys(COLUMNS)[1].toLowerCase()) {
+      const headers = Object.keys(COLUMNS).map(key => capitalize(key));
+      sheet.getRange(1, 1, 1, Object.keys(COLUMNS).length).setValues([headers]);
       
-      const headerRange = sheet.getRange(1, 1, 1, 6);
+      const headerRange = sheet.getRange(1, 1, 1, Object.keys(COLUMNS).length);
       headerRange.setFontWeight('bold');
       headerRange.setBackground('#4285f4');
       headerRange.setFontColor('white');

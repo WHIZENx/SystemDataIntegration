@@ -1,25 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Record } from '../models/record.model';
-
-interface RecordFormProps {
-  record: Record | null;
-  onSubmit: (data: Omit<Record, 'id'>) => Promise<void>;
-  onCancel: (() => void) | null;
-  loading: boolean;
-  init: boolean;
-}
-
-interface FormData {
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  position: string;
-}
-
-interface FormErrors {
-  [key: string]: string;
-}
+import { FormData, FormErrors, RecordFormProps } from '../models/record.model';
 
 const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loading, init }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -27,7 +7,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
     email: '',
     phone: '',
     department: '',
-    position: ''
+    position: '',
+    profileImage: '',
+    status: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -39,7 +23,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         email: record.email || '',
         phone: record.phone || '',
         department: record.department || '',
-        position: record.position || ''
+        position: record.position || '',
+        profileImage: record.profileImage || '',
+        status: record.status || 0,
+        createdAt: record.createdAt || new Date().toISOString(),
+        updatedAt: record.updatedAt || new Date().toISOString(),
       });
     } else {
       setFormData({
@@ -47,7 +35,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         email: '',
         phone: '',
         department: '',
-        position: ''
+        position: '',
+        profileImage: '',
+        status: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     }
     setErrors({});
@@ -114,7 +106,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       email: '',
       phone: '',
       department: '',
-      position: ''
+      position: '',
+      profileImage: '',
+      status: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
     setErrors({});
   };
