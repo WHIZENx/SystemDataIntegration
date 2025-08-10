@@ -125,6 +125,41 @@ export class AppwriteStorageService {
       throw new Error(`Failed to download image: ${error}`);
     }
   }
+
+  /**
+   * View an image from Appwrite Storage
+   * @param fileId ID of the file to view
+   * @returns Promise with the view URL
+   */
+  async viewImage(fileId: string): Promise<string> {
+    try {
+      // Use Appwrite's getFileView to get a URL that forces download
+      const viewUrl = storage.getFileView(this.bucketId, fileId).toString();
+      
+      return viewUrl;
+    } catch (error) {
+      console.error('Error viewing image:', error);
+      throw new Error(`Failed to view image: ${error}`);
+    }
+  }
+
+  /**
+   * Preview an image from Appwrite Storage *(No plan for free)*
+   * @param fileId ID of the file to preview
+   * @returns Promise with the preview URL
+   */
+  async previewImage(fileId: string): Promise<string> {
+    try {
+      // Use Appwrite's getFilePreview to get a URL that forces download
+      const previewUrl = storage.getFilePreview(this.bucketId, fileId).toString();
+      
+      return previewUrl;
+    } catch (error) {
+      console.error('Error previewing image:', error);
+      throw new Error(`Failed to preview image: ${error}`);
+    }
+  }
+    
 }
 
 // Export a singleton instance of the service
