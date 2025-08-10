@@ -27,7 +27,11 @@ class GoogleSheetsAPIService {
         email: 'john.doe@company.com',
         phone: '+1-555-0123',
         department: 'Engineering',
-        position: 'Senior Developer'
+        position: 'Senior Developer',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       {
         id: 2,
@@ -35,7 +39,11 @@ class GoogleSheetsAPIService {
         email: 'jane.smith@company.com',
         phone: '+1-555-0124',
         department: 'Marketing',
-        position: 'Marketing Manager'
+        position: 'Marketing Manager',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       {
         id: 3,
@@ -43,7 +51,11 @@ class GoogleSheetsAPIService {
         email: 'mike.johnson@company.com',
         phone: '+1-555-0125',
         department: 'Sales',
-        position: 'Sales Representative'
+        position: 'Sales Representative',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       {
         id: 4,
@@ -51,7 +63,11 @@ class GoogleSheetsAPIService {
         email: 'sarah.wilson@company.com',
         phone: '+1-555-0126',
         department: 'HR',
-        position: 'HR Specialist'
+        position: 'HR Specialist',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       {
         id: 5,
@@ -59,7 +75,11 @@ class GoogleSheetsAPIService {
         email: 'david.brown@company.com',
         phone: '+1-555-0127',
         department: 'Finance',
-        position: 'Financial Analyst'
+        position: 'Financial Analyst',
+        profileImage: '',
+        status: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
     ];
   }
@@ -70,8 +90,10 @@ class GoogleSheetsAPIService {
   }
 
   // Generate a unique ID for new records
-  private generateId(): number {
-    return Date.now() + Math.random();
+  private async generateId(): Promise<number> {
+    const records = await this.getAllRecords();
+    const len = records.length;
+    return len > 0 ? records[len - 1].id + 1 : 1;
   }
 
   async initSheet() {
@@ -129,9 +151,13 @@ class GoogleSheetsAPIService {
   async createMultipleRecords(recordsData: Omit<Record, 'id'>[]): Promise<Record[]> {
     if (this.useMockData) {
       await this.delay(1500);
-      const newRecords: Record[] = recordsData.map(recordData => ({
-        id: this.generateId(),
-        ...recordData
+      const newRecords: Record[] = await Promise.all(recordsData.map(async recordData => {
+        const id = await this.generateId();
+        return {
+          id,
+          ...recordData,
+          status: 1,
+        };
       }));
       this.mockData.push(...newRecords);
       return newRecords;
@@ -173,8 +199,9 @@ class GoogleSheetsAPIService {
     if (this.useMockData) {
       await this.delay(1000);
       const newRecord: Record = {
-        id: this.generateId(),
-        ...recordData
+        id: await this.generateId(),
+        ...recordData,
+        status: 1,
       };
       this.mockData.push(newRecord);
       return newRecord;
@@ -215,9 +242,12 @@ class GoogleSheetsAPIService {
   async modifyMultipleRecords(recordsData: Omit<Record, 'id'>[]): Promise<Record[]> {
     if (this.useMockData) {
       await this.delay(1500);
-      const newRecords: Record[] = recordsData.map(recordData => ({
-        id: this.generateId(),
-        ...recordData
+      const newRecords: Record[] = await Promise.all(recordsData.map(async recordData => {
+        const id = await this.generateId();
+        return {
+          id,
+          ...recordData
+        };
       }));
       this.mockData.push(...newRecords);
       return newRecords;

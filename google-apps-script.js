@@ -15,7 +15,7 @@
 const SHEET_ID = 'GOOGLE_SHEET_ID'; // Replace this with your actual Sheet ID
 const SHEET_NAME = 'GOOGLE_SHEET_NAME'; // Change this if your sheet has a different name
 
-const COLUMNS = {}; // Add column name and index here ( NAME: INDEX )
+const COLUMNS = { ID: 0 }; // Add column name and index here ( NAME: INDEX )
 /** Example: COLUMNS = { 
    ID: 0, 
    NAME: 1, 
@@ -29,9 +29,11 @@ const COLUMNS = {}; // Add column name and index here ( NAME: INDEX )
    UPDATED_AT: 9 
 } */
 
+const findIdCol = Object.keys(COLUMNS).find(key => key.toLowerCase() === 'id');
+
 /**
- * Handle GET requests
- */
+* Handle GET requests
+    */
 function doGet(e) {
   if (e.parameter.action === 'getAll') {
     return ContentService.createTextOutput(JSON.stringify(getAllRecords()))
@@ -44,13 +46,13 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid action' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
+   
 /**
  * Handle POST requests
  */
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
-  
+     
   if (data.action === 'create') {
     return ContentService.createTextOutput(JSON.stringify(createRecord(data.data)))
       .setMimeType(ContentService.MimeType.JSON);
@@ -64,78 +66,120 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
   else if (data.action === 'update') {
-    return ContentService.createTextOutput(JSON.stringify(updateRecord(data.id, data.data)))
+    return ContentService.createTextOutput(JSON.stringify(updateRecord(data[findIdCol], data.data)))
       .setMimeType(ContentService.MimeType.JSON);
   }
   else if (data.action === 'delete') {
-    return ContentService.createTextOutput(JSON.stringify(deleteRecord(data.id)))
+    return ContentService.createTextOutput(JSON.stringify(deleteRecord(data[findIdCol])))
       .setMimeType(ContentService.MimeType.JSON);
   }
-  
+     
   return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid action' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
+   
 /**
  * Get the Google Sheet
  */
 function getSheet() {
   return SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
 }
-
+   
 /**
  * Generate a unique ID
  */
 function generateId() {
-  return Utilities.getUuid();
+  const sheet = getSheet();
+  const data = sheet.getDataRange().getValues();
+  const len = data.length;
+  return len > 1 ? (data[len - 1][COLUMNS[findIdCol]] || 0) + 1 : 1;
 }
-
+   
 /**
  * Convert row to record object
  */
-function rowToRecord(row, rowIndex) {
-  if (!row || row.length < Object.keys(COLUMNS).length) return null;
-
+function convertToRecord(row, id = undefined) {
   const record = {};
-  Object.keys(COLUMNS).forEach(key => {
-    record[key.toLowerCase()] = row[COLUMNS[key]] || '';
-  });
-  record.rowIndex = rowIndex;
-  
+  for (let i = 0; i < Object.keys(COLUMNS).length; i++) {
+    const key = Object.keys(COLUMNS)[i].toLowerCase();
+    const findValCol = Object.keys(COLUMNS).find(keyRow => keyRow.toLowerCase() === key)
+    if (key === 'id') {
+      record['id'] = id !== undefined ? id : row[COLUMNS[findValCol]] || '';
+    } else if (key === 'created_at' || key === 'updated_at') {
+      record[key] = row[COLUMNS[findValCol]] || new Date().toISOString();
+    } else {
+      record[key] = row[COLUMNS[findValCol]] || (!isNaN(row[COLUMNS[findValCol]]) ? 0 : '');
+    }
+  }
   return record;
 }
-
-function recordToRowObject(record, id = undefined) {
-  if (!record || !record.id) return null;
-
-  const row = [];
-  Object.keys(record).forEach(key => {
-    if (key.toLowerCase() === 'id') {
-      row['id'] = id !== undefined ? id : record.id || '';
+   
+/**
+ * Convert record to row
+ */
+function convertToRow(record, id = undefined) {
+  const row = {};
+  for (let i = 0; i < Object.keys(COLUMNS).length; i++) {
+    const key = Object.keys(COLUMNS)[i].toLowerCase();
+    const findValCol = Object.keys(record).find(keyRecord => keyRecord.toLowerCase() === key)
+    if (findValCol.toLowerCase() === 'id') {
+      row[findIdCol] = id !== undefined ? id : record[findValCol] || '';
+    } else if (key === 'created_at' || key === 'updated_at') {
+      row[Object.keys(COLUMNS)[i]] = record[findValCol] || new Date().toISOString();
     } else {
-      row[key.toLowerCase()] = record[key];
+      row[Object.keys(COLUMNS)[i]] = record[findValCol] || (record[findValCol] === 0 ? 0 : '');
     }
-  });
-  
+  }
   return row;
 }
-
+   
+/**
+ * Convert row to record object
+ */
+function rowToRecord(row) {
+  if (!row || row.length < Object.keys(COLUMNS).length) {
+    return null;
+  }
+  return convertToRecord(row);
+}
+   
+/**
+ * Convert record to row object
+ */
+function recordToRecordObject(record, id = undefined) {
+  const findIdCol = Object.keys(record).find(key => key.toLowerCase() === 'id')
+  if (!record || (!record[findIdCol] && id === undefined)) {
+    return null;
+  }
+  return convertToRecord(record, id);
+}
+   
+/**
+ * Create record to row 
+ */
+function createRow(recordData, id = undefined) {
+  const newRecord = recordToRecordObject(recordData, id);
+  return convertToRow(newRecord)
+}
+   
 /**
  * Convert record to row array
  */
-function recordToRow(record) {
-  return [
-    ...recordToRowObject(record)
-  ];
+function objectValues(recordData) {
+  const result = []
+  for (let i = 0; i < Object.keys(recordData).length; i++) {
+    result.push(recordData[Object.keys(recordData)[i]])
+  }
+  return result
 }
-
+   
 /**
  * Capitalize first letter of a string
  */
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
-
+   
 /**
  * Get all records
  */
@@ -143,71 +187,69 @@ function getAllRecords() {
   try {
     const sheet = getSheet();
     const data = sheet.getDataRange().getValues();
-    
+       
     // Skip header row (index 0)
     const records = [];
     for (let i = 1; i < data.length; i++) {
       const record = rowToRecord(data[i], i + 1);
-      if (record && record.id) {
-        delete record.rowIndex;
+      if (record && record['id']) {
         records.push(record);
       }
     }
-    
+       
     return { records: records };
   } catch (error) {
     return { error: 'Failed to fetch records: ' + error.toString() };
   }
 }
-
+   
 /**
  * Get a record by ID
  */
 function getRecord(id) {
+  id = 2
   try {
     if (!id) {
       return { error: 'ID is required' };
     }
-    
+       
     const sheet = getSheet();
     const data = sheet.getDataRange().getValues();
-    
+       
     for (let i = 1; i < data.length; i++) {
       const record = rowToRecord(data[i], i + 1);
-      if (record && record.id === id) {
-        delete record.rowIndex;
+      if (record && record['id'] === id) {
         return { record: record };
       }
     }
-    
+       
     return { error: 'Record not found' };
   } catch (error) {
     return { error: 'Failed to fetch record: ' + error.toString() };
   }
 }
-
+   
 /**
  * Create a new record
  */
 function createRecord(recordData) {
   try {
-    if (!recordData || !recordData.name || !recordData.email) {
-      return { error: 'Name and email are required' };
+    if (!recordData) {
+      return { error: 'Record data is required' };
     }
-    
+       
     const sheet = getSheet();
-    
-    const newRecord = recordToRowObject(recordData, generateId());
-    
-    const row = recordToRow(newRecord);
+       
+    const newRecord = createRow(recordData, generateId())
+    const row = objectValues(newRecord)
     sheet.appendRow(row);
-    
+       
     return { record: newRecord };
   } catch (error) {
     return { error: 'Failed to create record: ' + error.toString() };
   }
 }
-
+   
 /**
  * Create a new multiple records
  */
@@ -216,35 +258,38 @@ function createMultipleRecords(recordsData) {
     if (!Array.isArray(recordsData)) {
       return { error: 'No records provided for batch creation' };
     }
-
+   
     const sheet = getSheet();
-
+   
     const lastRow = sheet.getLastRow();
     const startRow = lastRow + 1;
-    
+       
     const batchData = [];
     const createdRecords = [];
-    
-    recordsData.forEach((recordData) => {
-      const id = generateId();
-      const rowData = recordToRow(recordData);
-      
-      batchData.push(rowData);
-      
-      createdRecords.push(recordToRowObject(recordData, id));
-    });
-    
+   
+    let id = generateId();
+       
+    for (let i = 0; i < recordsData.length; i++) {
+      const newRecord = createRow(recordsData[i], id)
+      const row = objectValues(newRecord)
+         
+      batchData.push(row);
+         
+      createdRecords.push(newRecord);
+      id++
+    }
+       
     if (batchData.length > 0) {
       const range = sheet.getRange(startRow, 1, batchData.length, batchData[0].length);
       range.setValues(batchData);
     }
-
+   
     return { records: createdRecords };
   } catch (error) {
     return { error: 'Failed to create multiple records: ' + error.toString() };
   }
 }
-
+   
 /**
  * Update an existing record
  */
@@ -253,32 +298,36 @@ function updateRecord(id, recordData) {
     if (!id) {
       return { error: 'ID is required' };
     }
-    
-    if (!recordData || !recordData.name || !recordData.email) {
-      return { error: 'Name and email are required' };
+       
+    if (!recordData) {
+      return { error: 'Record data is required' };
     }
-    
+       
     const sheet = getSheet();
     const data = sheet.getDataRange().getValues();
-    
+       
     for (let i = 1; i < data.length; i++) {
-      const record = rowToRecord(data[i], i + 1);
-      if (record && record.id === id) {
-        const updatedRecord = recordToRowObject(recordData, id);
-        
-        const row = recordToRow(updatedRecord);
-        sheet.getRange(i + 1, 1, 1, Object.keys(COLUMNS).length).setValues([row]);
-        
+      const record = data[i]
+      if (record[COLUMNS[findIdCol]] === id) {
+        const updatedRecord = recordToRecordObject(recordData, id);
+        const updateDate = Object.keys(updatedRecord).find(key => key.toLowerCase() === 'update_date')
+        if (updateDate) {
+          updatedRecord[updateDate] = new Date().toISOString();
+        }
+           
+        const row = objectValues(updatedRecord);
+        sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
+           
         return { record: updatedRecord };
       }
     }
-    
+       
     return { error: 'Record not found' };
   } catch (error) {
     return { error: 'Failed to update record: ' + error.toString() };
   }
 }
-
+   
 /**
  * Update/Create a multiple records
  */
@@ -287,65 +336,73 @@ function modifyMultipleRecords(recordsData) {
     if (!Array.isArray(recordsData)) {
       return { error: 'No records provided for batch modify' };
     }
-
+   
     const sheet = getSheet();
-
+   
     const data = sheet.getDataRange().getValues();
     const modifyRecords = [];
-    
+       
     for (let i = 0; i < recordsData.length; i++) {
       const recordData = recordsData[i]
-      const rowDataIndex = data.findIndex((row, index) => index > 0 && Number(row[0]) === Number(recordData.id))
+      const rowDataIndex = data.findIndex((row, index) => index > 0 && Number(row[COLUMNS[findIdCol]]) === Number(recordData.id))
       if (rowDataIndex > -1) {
-        const updatedRecord = recordToRowObject(recordData);
-
+        const updatedRecord = recordToRecordObject(recordData);
+        const updateDate = Object.keys(updatedRecord).find(key => key.toLowerCase() === 'update_date')
+        if (updateDate) {
+          updatedRecord[updateDate] = new Date().toISOString();
+        }
+   
         modifyRecords.push(updatedRecord);
-        
-        const row = recordToRow(updatedRecord);
-        sheet.getRange(rowDataIndex + 1, 1, 1, Object.keys(COLUMNS).length).setValues([row]);
+           
+        const row = objectValues(updatedRecord);
+        sheet.getRange(rowDataIndex + 1, 1, 1, row.length).setValues([row]);
       } else {
-        const newRecord = recordToRowObject(recordData);
-
+        const newRecord = createRow(recordData, generateId())
+        const status = Object.keys(newRecord).find(key => key.toLowerCase() === 'status')
+        if (status) {
+          newRecord[status] = 1;
+        }
+   
         modifyRecords.push(newRecord);
-        
-        const row = recordToRow(newRecord);
+   
+        const row = objectValues(newRecord)
         sheet.appendRow(row);
       }
     }
-
+   
     return { records: modifyRecords };
   } catch (error) {
     return { error: 'Failed to create multiple records: ' + error.toString() };
   }
 }
-
+   
 /**
  * Delete a record
  */
 function deleteRecord(id) {
+  id = 4
   try {
     if (!id) {
       return { error: 'ID is required' };
     }
-    
+       
     const sheet = getSheet();
     const data = sheet.getDataRange().getValues();
-    
+       
     for (let i = 1; i < data.length; i++) {
-      const record = rowToRecord(data[i], i + 1);
-      if (record && record.id === id) {
+      const record = data[i]
+      if (record[COLUMNS[findIdCol]] === id) {
         sheet.deleteRow(i + 1);
-        delete record.rowIndex;
         return { record: record };
       }
     }
-    
+       
     return { error: 'Record not found' };
   } catch (error) {
     return { error: 'Failed to delete record: ' + error.toString() };
   }
 }
-
+   
 /**
  * Initialize sheet with headers
  */
@@ -357,7 +414,7 @@ function initializeSheet() {
     if (firstRow[0].toLowerCase() !== Object.keys(COLUMNS)[0].toLowerCase() || firstRow[1].toLowerCase() !== Object.keys(COLUMNS)[1].toLowerCase()) {
       const headers = Object.keys(COLUMNS).map(key => capitalize(key));
       sheet.getRange(1, 1, 1, Object.keys(COLUMNS).length).setValues([headers]);
-      
+         
       const headerRange = sheet.getRange(1, 1, 1, Object.keys(COLUMNS).length);
       headerRange.setFontWeight('bold');
       headerRange.setBackground('#4285f4');
@@ -367,3 +424,4 @@ function initializeSheet() {
     console.error('Error initializing sheet:', error);
   }
 }
+   
