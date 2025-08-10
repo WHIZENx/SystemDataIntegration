@@ -4,6 +4,9 @@ import { NeonAPI } from './services/neonAPI';
 import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
+import Navigation from './components/Navigation';
+import ImageGallery from './pages/ImageGallery';
+import FirebaseTest from './pages/FirebaseTest';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
@@ -17,29 +20,43 @@ const App: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [searchName, setSearchName] = useState<string>('');
-  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isExportingExcel, setIsExportingExcel] = useState<boolean>(false);
   const [isExportingCSV, setIsExportingCSV] = useState<boolean>(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const apiType = useRef(ApiType.GOOGLE_SHEETS);
+  // Navigation and theme state
+  const [activePage, setActivePage] = useState<string>('records');
+  const [darkMode, setDarkMode] = useState<boolean>(localStorage.getItem('theme') === 'dark');
+
+  const [apiType, setApiType] = useState(ApiType.GOOGLE_SHEETS);
+
+  // Initialize theme based on localStorage when app loads
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   // Load records on component mount
   useEffect(() => {
-    loadRecords();
-  }, []);
+    if (activePage === 'records') {
+      loadRecords(apiType);
+    }
+  }, [activePage]);
 
-  const loadRecords = async (): Promise<void> => {
+  const loadRecords = async (loadApiType: ApiType): Promise<void> => {
     setLoading(true);
     setInit(false);
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (loadApiType === ApiType.NEON) {
         const data = await NeonAPI.getAllEmployees();
         setRecords(data);
-      } else if (apiType.current === ApiType.FIREBASE) {
+      } else if (loadApiType === ApiType.FIREBASE) {
         const data = await firebaseService.getAllRecords();
         setRecords(data);
       } else {
@@ -57,18 +74,18 @@ const App: React.FC = () => {
   const searchEmployees = async (name: string): Promise<void> => {
     if (!name.trim()) {
       // If search is empty, load all records
-      await loadRecords();
+      await loadRecords(apiType);
       return;
     }
 
-    setIsSearching(true);
+    setLoading(true);
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (apiType === ApiType.NEON) {
         const data = await NeonAPI.searchEmployees({ name: name.trim() });
         setRecords(data);
-      } else if (apiType.current === ApiType.FIREBASE) {
+      } else if (apiType === ApiType.FIREBASE) {
         const data = await firebaseService.findRecordsByField('name', name.trim());
         setRecords(data);
       } else {
@@ -82,52 +99,63 @@ const App: React.FC = () => {
     } catch (err) {
       setError('Failed to search records: ' + (err as Error).message);
     } finally {
-      setIsSearching(false);
+      setLoading(false);
     }
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const value = event.target.value;
-    setSearchName(value);
-    
-    if (IS_AUTO_SEARCH) {
+  // Set up debounced search if auto-search is enabled
+  useEffect(() => {
+    if (IS_AUTO_SEARCH && searchName.trim()) {
       // Clear previous timeout
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
       
-      // Debounce search - search after user stops typing for 500ms
+      // Set new timeout for search
       searchTimeoutRef.current = setTimeout(() => {
-        searchEmployees(value);
+        searchEmployees(searchName);
       }, AUTO_SEARCH_DELAY);
     }
-  };
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchName]);
 
-  const handleSearchSubmit = (event: React.FormEvent): void => {
-    event.preventDefault();
+  const handleSearchSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    if (!searchName.trim()) {
+      loadRecords(apiType);
+      return;
+    }
+    
+    setLoading(true);
     searchEmployees(searchName);
   };
 
-  const clearSearch = (): void => {
+  const _clearSearch = (): void => {
     setSearchName('');
-    loadRecords();
+    loadRecords(apiType);
   };
-
-  // Search and export functionality are now handled by dedicated components
 
   const handleCreate = async (recordData: Omit<Record, 'id'>): Promise<void> => {
     setLoading(true);
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (apiType === ApiType.NEON) {
         await NeonAPI.createEmployee(recordData);
-      } else if (apiType.current === ApiType.FIREBASE) {
+      } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.createRecord(recordData);
       } else {
         await GoogleSheetsAPI.createRecord(recordData);
       }
-      await loadRecords(); // Refresh the list
+      await loadRecords(apiType); // Refresh the list
       setSuccess('Record created successfully');
     } catch (err) {
       setError('Failed to create record: ' + (err as Error).message);
@@ -141,15 +169,15 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (apiType === ApiType.NEON) {
         await NeonAPI.updateEmployee(id, recordData);
-      } else if (apiType.current === ApiType.FIREBASE) {
+      } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.updateRecord(id, recordData);
       } else {
         await GoogleSheetsAPI.updateRecord(id, recordData);
       }
       setEditingRecord(null);
-      await loadRecords(); // Refresh the list
+      await loadRecords(apiType); // Refresh the list
       setSuccess('Record updated successfully');
     } catch (err) {
       setError('Failed to update record: ' + (err as Error).message);
@@ -167,14 +195,14 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (apiType === ApiType.NEON) {
         await NeonAPI.deleteEmployee(id);
-      } else if (apiType.current === ApiType.FIREBASE) {
+      } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.deleteRecord(id);
       } else {
         await GoogleSheetsAPI.deleteRecord(id);
       }
-      await loadRecords(); // Refresh the list
+      await loadRecords(apiType); // Refresh the list
       setSuccess('Record deleted successfully');
     } catch (err) {
       setError('Failed to delete record: ' + (err as Error).message);
@@ -196,8 +224,10 @@ const App: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      if (apiType.current === ApiType.NEON) {
+      if (apiType === ApiType.NEON) {
         await NeonAPI.createDbEmployee();
+      } else if (apiType === ApiType.FIREBASE) {
+        await firebaseService.initDatabaseStructure();
       } else {
         await GoogleSheetsAPI.initSheet();
       }
@@ -209,37 +239,153 @@ const App: React.FC = () => {
     }
   };
 
+  // Toggle between light and dark themes
+  const toggleTheme = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    
+    // Update the DOM
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+  
+  // Handle navigation between pages
+  const handleNavigate = (page: string) => {
+    setActivePage(page);
+  };
+
+  const onSetApiType = (loadApiType: ApiType) => {
+    setApiType(loadApiType);
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    setRecords([]);
+    loadRecords(loadApiType);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{apiType.current === ApiType.NEON ? 'NEON Database' : 'Google Sheets'} CRUD</h1>
-          <p className="mt-2 text-gray-600">Manage your data with Create, Read, Update, Delete operations
-          <a className="ml-2 text-blue-600 hover:text-blue-800 underline cursor-pointer" onClick={handleCreateEmployeeTable}>Create Employee table</a></p>
-        </div>
+    <div className="min-h-screen bg-white dark:bg-gray-900 dark:text-white transition-colors duration-300">
+      <Navigation 
+        activePage={activePage} 
+        onNavigate={handleNavigate}
+        onThemeToggle={toggleTheme}
+        isDarkMode={darkMode}
+      />
+      
+      <div className="container mx-auto px-4 py-8">
+        {activePage === 'records' ? (
+          <>
+            {/* API Selection */}
+            <div className="mb-6 flex justify-center">
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  onClick={() => onSetApiType(ApiType.GOOGLE_SHEETS)}
+                  className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.GOOGLE_SHEETS ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} rounded-l-lg`}
+                >
+                  Google Sheets
+                </button>
+                <button 
+                  onClick={() => onSetApiType(ApiType.NEON)}
+                  className={`px-4 py-2 text-sm font-medium border-t border-b ${apiType === ApiType.NEON ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                >
+                  Neon DB
+                </button>
+                <button 
+                  onClick={() => onSetApiType(ApiType.FIREBASE)}
+                  className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.FIREBASE ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} rounded-r-lg`}
+                >
+                  Firebase
+                </button>
+              </div>
+            </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between">
-            <span>{error}</span>
-            <span className="cursor-pointer text-gray-600 hover:text-gray-800" onClick={() => setError('')}>x</span>
-          </div>
-        )}
+            {/* Error message */}
+            {error && (
+              <div className="mb-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
+                <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setError('')}>
+                  <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <title>Close</title>
+                    <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                  </svg>
+                </span>
+              </div>
+            )}
 
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded flex items-center justify-between">
-            <span>{success}</span>
-            <span className="cursor-pointer text-gray-600 hover:text-gray-800" onClick={() => setSuccess('')}>x</span>
-          </div>
-        )}
+            {/* Success message */}
+            {success && (
+              <div className="mb-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{success}</span>
+                <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setSuccess('')}>
+                  <svg className="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <title>Close</title>
+                    <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                  </svg>
+                </span>
+              </div>
+            )}
+            
+            {/* Search Form */}
+            <div className="mb-6">
+              <form onSubmit={handleSearchSubmit} className="flex">
+                <input 
+                  type="text" 
+                  placeholder="Search by name..."
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  className="flex-grow px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button 
+                  type="submit" 
+                  className="bg-blue-500 text-white px-6 py-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-blue-300"
+                  disabled={loading}
+                >
+                  Search
+                </button>
+              </form>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form Section */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
-                {editingRecord ? 'Edit Record' : 'Add New Record'}
-              </h2>
-              <RecordForm
+            <div className="flex items-center justify-between">
+              {/* Export Buttons */}
+              <ExportButtons 
+                apiType={apiType}
+                records={records} 
+                loading={loading}
+                isExporting={isExporting}
+                isExportingExcel={isExportingExcel}
+                isExportingCSV={isExportingCSV}
+                setIsExporting={setIsExporting}
+                setIsExportingExcel={setIsExportingExcel}
+                setIsExportingCSV={setIsExportingCSV}
+                setError={setError}
+                setSuccess={setSuccess}
+              />
+              <button
+                onClick={handleCreateEmployeeTable}
+                className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                disabled={loading}
+              >
+                Create Table
+              </button>
+            </div>
+
+            {/* Record List */}
+            <RecordList 
+              records={records} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+              loading={loading}
+            />
+            
+            {/* Record Form */}
+            <div className="mt-10">
+              <h2 className="text-2xl font-bold mb-4">{editingRecord ? 'Edit Record' : 'Add New Record'}</h2>
+              <RecordForm 
                 record={editingRecord}
                 onSubmit={editingRecord ? 
                   (data) => handleUpdate(editingRecord.id, data) : 
@@ -250,81 +396,12 @@ const App: React.FC = () => {
                 init={init}
               />
             </div>
-          </div>
-
-          {/* Records List Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">Records ({records.length})</h2>
-                  <div className="flex gap-2">
-                    <ExportButtons
-                      apiType={apiType.current}
-                      records={records}
-                      loading={loading}
-                      isExporting={isExporting}
-                      isExportingExcel={isExportingExcel}
-                      isExportingCSV={isExportingCSV}
-                      setIsExporting={setIsExporting}
-                      setIsExportingExcel={setIsExportingExcel}
-                      setIsExportingCSV={setIsExportingCSV}
-                      setError={setError}
-                      setSuccess={setSuccess}
-                    />
-                    <button
-                      onClick={loadRecords}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                      disabled={loading}
-                    >
-                      {loading ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Search Input */}
-                <form onSubmit={handleSearchSubmit} className="mb-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={searchName}
-                        onChange={handleSearchChange}
-                        placeholder="Search by employee name..."
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        disabled={loading || isSearching}
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                      disabled={loading || isSearching}
-                      onClick={handleSearchSubmit}
-                    >
-                      {isSearching ? 'Searching...' : 'Search'}
-                    </button>
-                    {searchName && (
-                      <button
-                        type="button"
-                        onClick={clearSearch}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={loading || isSearching}
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
-              <RecordList
-                records={records}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                loading={loading}
-              />
-            </div>
-          </div>
-        </div>
+          </>
+        ) : activePage === 'gallery' ? (
+          <ImageGallery activePage={activePage} />
+        ) : (
+          <FirebaseTest activePage={activePage} />
+        )}
       </div>
     </div>
   );

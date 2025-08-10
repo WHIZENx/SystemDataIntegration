@@ -13,4 +13,3 @@ export const DEFAULT_EMPLOYEE: Record = {
 
 export const IS_AUTO_SEARCH = false;
 export const AUTO_SEARCH_DELAY = 500;
-

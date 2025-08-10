@@ -4,7 +4,6 @@ import {
   get, 
   update, 
   remove, 
-  push, 
   query, 
   orderByChild, 
   equalTo,
@@ -29,23 +28,53 @@ export class FirebaseService {
   }
 
   /**
+   * Initialize database structure if not exists
+   * Creates the necessary structure for storing records
+   */
+  async initDatabaseStructure(): Promise<void> {
+    const snapshot = await get(this.recordsRef);
+    if (!snapshot.exists()) {
+      // Create empty structure if doesn't exist
+      await set(this.recordsRef, {});
+    }
+  }
+
+  /**
+   * Get the next available ID for a new record
+   * @returns Promise with the next ID to use
+   */
+  private async getNextId(): Promise<number> {
+    const records = await this.getAllRecords();
+    if (records.length === 0) {
+      return 1; // Start with 1 if no records exist
+    }
+    
+    // Find max ID and increment
+    const maxId = Math.max(...records.map(r => r.id));
+    return maxId + 1;
+  }
+
+  /**
    * Create a new record in Firebase Database
    * @param record Record data without ID
    * @returns Promise with the created record including ID
    */
   async createRecord(record: Omit<Record, 'id'>): Promise<Record> {
-    // Generate a new reference with unique ID
-    const newRecordRef = push(this.recordsRef);
-    const recordId = Number(newRecordRef.key);
+    // Ensure database structure exists
+    await this.initDatabaseStructure();
+    
+    // Get next numeric ID
+    const nextId = await this.getNextId();
     
     // Create new record with the generated ID
     const newRecord: Record = {
-      id: recordId,
+      id: nextId,
       ...record
     };
     
-    // Save to Firebase
-    await set(newRecordRef, newRecord);
+    // Save to Firebase using the numeric ID as the key
+    const recordRef = ref(db, `${RECORDS_COLLECTION}/${nextId}`);
+    await set(recordRef, newRecord);
     
     return newRecord;
   }
@@ -76,7 +105,10 @@ export class FirebaseService {
     
     if (snapshot.exists()) {
       snapshot.forEach((childSnapshot: DataSnapshot) => {
-        records.push(childSnapshot.val() as Record);
+        const record = childSnapshot.val();
+        if (record && typeof record === 'object' && 'id' in record) {
+          records.push(record as Record);
+        }
       });
     }
     

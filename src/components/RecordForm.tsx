@@ -122,7 +122,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Name
         </label>
         <input
@@ -132,15 +132,15 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           value={formData.name}
           onChange={handleChange}
           className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-            errors.name ? 'border-red-300' : 'border-gray-300'
-          }`}
+            errors.name ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
           placeholder="Enter full name"
         />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+        {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
         <input
@@ -150,15 +150,15 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           value={formData.email}
           onChange={handleChange}
           className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-            errors.email ? 'border-red-300' : 'border-gray-300'
-          }`}
+            errors.email ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
           placeholder="Enter email address"
         />
-        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+        {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Phone
         </label>
         <input
@@ -168,15 +168,15 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           value={formData.phone}
           onChange={handleChange}
           className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-            errors.phone ? 'border-red-300' : 'border-gray-300'
-          }`}
+            errors.phone ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
           placeholder="Enter phone number"
         />
-        {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+        {errors.phone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>}
       </div>
 
       <div>
-        <label htmlFor="department" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Department
         </label>
         <select
@@ -185,8 +185,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           value={formData.department}
           onChange={handleChange}
           className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-            errors.department ? 'border-red-300' : 'border-gray-300'
-          }`}
+            errors.department ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
         >
           <option value="">Select department</option>
           <option value="Engineering">Engineering</option>
@@ -196,11 +196,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           <option value="Finance">Finance</option>
           <option value="Operations">Operations</option>
         </select>
-        {errors.department && <p className="mt-1 text-sm text-red-600">{errors.department}</p>}
+        {errors.department && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.department}</p>}
       </div>
 
       <div>
-        <label htmlFor="position" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Position
         </label>
         <input
@@ -210,11 +210,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
           value={formData.position}
           onChange={handleChange}
           className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-            errors.position ? 'border-red-300' : 'border-gray-300'
-          }`}
+            errors.position ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
           placeholder="Enter job position"
         />
-        {errors.position && <p className="mt-1 text-sm text-red-600">{errors.position}</p>}
+        {errors.position && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.position}</p>}
       </div>
 
       <div className="flex space-x-3 pt-4">
@@ -235,7 +235,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
           </button>
@@ -244,7 +244,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
             type="button"
             onClick={handleReset}
             disabled={loading}
-            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Reset
           </button>
