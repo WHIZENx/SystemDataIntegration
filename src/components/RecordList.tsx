@@ -65,7 +65,7 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
             {records.map((record, index) => (
               <tr key={record.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-gray-200">{record.profileImage}</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-200">{record.profile_image}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-200">{record.name}</div>

@@ -6,10 +6,10 @@ export interface Record {
   phone: string;
   department: string;
   position: string;
-  profileImage: string;
+  profile_image: string;
   status: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RecordFormProps {
@@ -26,10 +26,10 @@ export interface FormData {
   phone: string;
   department: string;
   position: string;
-  profileImage: string;
+  profile_image: string;
   status: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface FormErrors {

@@ -13,7 +13,11 @@ export const formatRecordsForExport = (records: Record[]) => {
     Email: record.email,
     Phone: record.phone,
     Department: record.department,
-    Position: record.position
+    Position: record.position,
+    Profile_image: record.profile_image || '',
+    Status: record.status || 0,
+    Created_at: record.created_at || new Date().toISOString(),
+    Updated_at: record.updated_at || new Date().toISOString()
   }));
 };
 
@@ -32,7 +36,11 @@ export const exportToGoogleSheets = async (records: Record[]): Promise<Record[]>
     email: record.email,
     phone: record.phone,
     department: record.department,
-    position: record.position
+    position: record.position,
+    profile_image: record.profile_image || '',
+    status: record.status || 0,
+    created_at: record.created_at || new Date().toISOString(),
+    updated_at: record.updated_at || new Date().toISOString()
   }));
 
   // Export to Google Sheets

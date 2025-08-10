@@ -10,10 +10,10 @@ export const DEFAULT_EMPLOYEE: Record = {
   phone: '',
   department: '',
   position: '',
-  profileImage: '',
+  profile_image: '',
   status: 0,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 export const IS_AUTO_SEARCH = false;

@@ -50,10 +50,10 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       phone: `+1${Math.floor(Math.random() * 10000000000)}`,
       department: ['HR', 'IT', 'Sales', 'Marketing'][Math.floor(Math.random() * 4)],
       position: ['Manager', 'Developer', 'Designer', 'Analyst'][Math.floor(Math.random() * 4)],
-      profileImage: '',
+      profile_image: '',
       status: 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     
     try {
@@ -206,10 +206,10 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
         phone: `+1${Math.floor(Math.random() * 10000000000)}`,
         department: 'Test Department',
         position: 'Test Position',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       
       const createdRecord = await firebaseService.createRecord(newRecord);

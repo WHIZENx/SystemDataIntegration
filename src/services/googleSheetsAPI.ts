@@ -28,10 +28,10 @@ class GoogleSheetsAPIService {
         phone: '+1-555-0123',
         department: 'Engineering',
         position: 'Senior Developer',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
         id: 2,
@@ -40,10 +40,10 @@ class GoogleSheetsAPIService {
         phone: '+1-555-0124',
         department: 'Marketing',
         position: 'Marketing Manager',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
         id: 3,
@@ -52,10 +52,10 @@ class GoogleSheetsAPIService {
         phone: '+1-555-0125',
         department: 'Sales',
         position: 'Sales Representative',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
         id: 4,
@@ -64,10 +64,10 @@ class GoogleSheetsAPIService {
         phone: '+1-555-0126',
         department: 'HR',
         position: 'HR Specialist',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
         id: 5,
@@ -76,10 +76,10 @@ class GoogleSheetsAPIService {
         phone: '+1-555-0127',
         department: 'Finance',
         position: 'Financial Analyst',
-        profileImage: '',
+        profile_image: '',
         status: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
     ];
   }
@@ -212,7 +212,7 @@ class GoogleSheetsAPIService {
         this.baseURL,
         {
           action: 'create',
-          data: recordData
+          data: { ...recordData, status: 1 }
         },
         {
           headers: {

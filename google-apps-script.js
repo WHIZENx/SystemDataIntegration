@@ -52,6 +52,8 @@ function doGet(e) {
  */
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
+
+  const findIdCol = Object.keys(data).find(key => key.toLowerCase() === 'id');
      
   if (data.action === 'create') {
     return ContentService.createTextOutput(JSON.stringify(createRecord(data.data)))
@@ -104,16 +106,18 @@ function convertToRecord(row, id = undefined) {
     const key = Object.keys(COLUMNS)[i].toLowerCase();
     const findValCol = Object.keys(COLUMNS).find(keyRow => keyRow.toLowerCase() === key)
     if (key === 'id') {
-      record['id'] = id !== undefined ? id : row[COLUMNS[findValCol]] || '';
+      record['id'] = id !== undefined ? id : row[COLUMNS[findValCol]] || 1;
     } else if (key === 'created_at' || key === 'updated_at') {
       record[key] = row[COLUMNS[findValCol]] || new Date().toISOString();
+    } else if (key === 'status') {
+      record[key] = row[COLUMNS[findValCol]] || 0;
     } else {
-      record[key] = row[COLUMNS[findValCol]] || (!isNaN(row[COLUMNS[findValCol]]) ? 0 : '');
+      record[key] = row[COLUMNS[findValCol]] || '';
     }
   }
   return record;
 }
-   
+
 /**
  * Convert record to row
  */
@@ -122,17 +126,19 @@ function convertToRow(record, id = undefined) {
   for (let i = 0; i < Object.keys(COLUMNS).length; i++) {
     const key = Object.keys(COLUMNS)[i].toLowerCase();
     const findValCol = Object.keys(record).find(keyRecord => keyRecord.toLowerCase() === key)
-    if (findValCol.toLowerCase() === 'id') {
-      row[findIdCol] = id !== undefined ? id : record[findValCol] || '';
+    if ((!findValCol && key === 'id') ||findValCol.toLowerCase() === 'id') {
+      row[findIdCol] = id !== undefined ? id : record[findValCol] || 1;
     } else if (key === 'created_at' || key === 'updated_at') {
       row[Object.keys(COLUMNS)[i]] = record[findValCol] || new Date().toISOString();
+    } else if (key === 'status') {
+      row[Object.keys(COLUMNS)[i]] = record[findValCol] || 0;
     } else {
-      row[Object.keys(COLUMNS)[i]] = record[findValCol] || (record[findValCol] === 0 ? 0 : '');
+      row[Object.keys(COLUMNS)[i]] = record[findValCol] || '';
     }
   }
   return row;
 }
-   
+
 /**
  * Convert row to record object
  */
@@ -142,7 +148,7 @@ function rowToRecord(row) {
   }
   return convertToRecord(row);
 }
-   
+
 /**
  * Convert record to row object
  */
@@ -151,9 +157,10 @@ function recordToRecordObject(record, id = undefined) {
   if (!record || (!record[findIdCol] && id === undefined)) {
     return null;
   }
-  return convertToRecord(record, id);
+
+  return convertToRow(record, id);
 }
-   
+
 /**
  * Create record to row 
  */
@@ -161,7 +168,7 @@ function createRow(recordData, id = undefined) {
   const newRecord = recordToRecordObject(recordData, id);
   return convertToRow(newRecord)
 }
-   
+
 /**
  * Convert record to row array
  */
@@ -172,7 +179,7 @@ function objectValues(recordData) {
   }
   return result
 }
-   
+
 /**
  * Capitalize first letter of a string
  */

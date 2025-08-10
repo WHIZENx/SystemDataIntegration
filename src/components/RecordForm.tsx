@@ -8,10 +8,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
     phone: '',
     department: '',
     position: '',
-    profileImage: '',
+    profile_image: '',
     status: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -24,10 +24,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         phone: record.phone || '',
         department: record.department || '',
         position: record.position || '',
-        profileImage: record.profileImage || '',
+        profile_image: record.profile_image || '',
         status: record.status || 0,
-        createdAt: record.createdAt || new Date().toISOString(),
-        updatedAt: record.updatedAt || new Date().toISOString(),
+        created_at: record.created_at || new Date().toISOString(),
+        updated_at: record.updated_at || new Date().toISOString(),
       });
     } else {
       setFormData({
@@ -36,10 +36,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
         phone: '',
         department: '',
         position: '',
-        profileImage: '',
+        profile_image: '',
         status: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
     }
     setErrors({});
@@ -107,10 +107,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       phone: '',
       department: '',
       position: '',
-      profileImage: '',
+      profile_image: '',
       status: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
     setErrors({});
   };
