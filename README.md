@@ -93,7 +93,7 @@ Constants are defined in the `src/constants/default.constant.ts` file.
 export const TABLE_NAME = "employees"; // Table name for database
 
 // Default employee object
-export const DEFAULT_EMPLOYEE: Record = {
+export const DEFAULT_RECORD: Record = {
   id: 0,
   name: '',
   email: '',
@@ -297,10 +297,10 @@ import { neonAPI } from './services/neonAPI';
 await neonAPI.createDbEmployee();
 
 // Get all employees
-const employees = await neonAPI.getAllEmployees();
+const employees = await neonAPI.getAllRecords();
 
 // Create new employee
-const newEmployee = await neonAPI.createEmployee({
+const newEmployee = await neonAPI.createRecord({
   name: 'Jane Smith',
   email: 'jane@example.com',
   phone: '555-0200',
@@ -313,13 +313,13 @@ const newEmployee = await neonAPI.createEmployee({
 });
 
 // Update employee
-await neonAPI.updateEmployee(1, {
+await neonAPI.updateRecord(1, {
   department: 'Product Marketing',
   position: 'Senior Manager'
 });
 
 // Delete employee
-await neonAPI.deleteEmployee(1);
+await neonAPI.deleteRecord(1);
 ```
 
 ### Firebase Database
@@ -380,13 +380,13 @@ await storageService.deleteImage(uploadedImage.id);
 const databaseService = new AppwriteService();
 
 // Get all rows
-await databaseService.getAllRows();
+await databaseService.getAllRecords();
 
 // Search rows
-await databaseService.searchRows('John');
+await databaseService.searchRecords('John');
 
 // Create row
-await databaseService.createRow({
+await databaseService.createRecord({
   name: 'John Doe',
   email: 'john@example.com',
   phone: '555-0100',
@@ -399,13 +399,13 @@ await databaseService.createRow({
 });
 
 // Update row
-await databaseService.updateRow('1', {
+await databaseService.updateRecord('1', {
   name: 'John Doe Updated',
   position: 'Senior Developer'
 });
 
 // Delete row
-await databaseService.deleteRow('1');
+await databaseService.deleteRecord('1');
 ```
 
 ## 🛠 Available Scripts

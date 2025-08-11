@@ -8,10 +8,11 @@ import ExportButtons from './components/ExportButtons';
 import Navigation from './components/Navigation';
 import ImageGallery from './pages/ImageGallery';
 import FirebaseTest from './pages/FirebaseTest';
+import LoadTestNavigator from './pages/LoadTestNavigator';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
-import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, IS_AUTO_SEARCH } from './constants/default.constant';
+import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, DEFAULT_RECORD, IS_AUTO_SEARCH } from './constants/default.constant';
 import { appwriteService } from './services/appwriteService';
 import { RecordAppwrite } from './models/app-write.model';
 
@@ -69,13 +70,13 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (loadApiType === ApiType.NEON) {
-        const data = await neonAPI.getAllEmployees(cancelToken);
+        const data = await neonAPI.getAllRecords(cancelToken);
         setRecords(data);
       } else if (loadApiType === ApiType.FIREBASE) {
         const data = await firebaseService.getAllRecords();
         setRecords(data);
       } else if (loadApiType === ApiType.APPWRITE) {
-        const data = await appwriteService.getAllRows();
+        const data = await appwriteService.getAllRecords();
         setRecords(data);
       } else {
         const data = await googleSheetsAPI.getAllRecords(cancelToken);
@@ -92,7 +93,7 @@ const App: React.FC = () => {
     }
   };
 
-  const searchEmployees = async (name: string): Promise<void> => {
+  const searchRecords = async (name: string): Promise<void> => {
     if (!name.trim() || records.length === 0) {
       // If search is empty, load all records
       await loadRecords(apiType);
@@ -104,13 +105,13 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        const data = await neonAPI.searchEmployees({ name: name.trim() });
+        const data = await neonAPI.searchRecords({ name: name.trim() });
         setRecords(data);
       } else if (apiType === ApiType.FIREBASE) {
         const data = await firebaseService.findRecordsByField('name', name.trim(), DEFAULT_QUERY_TYPE);
         setRecords(data);
       } else if (apiType === ApiType.APPWRITE) {
-        const data = await appwriteService.searchRows(name.trim());
+        const data = await appwriteService.searchRecords(name.trim());
         setRecords(data);
       } else {
         // For Google Sheets, filter locally
@@ -137,7 +138,7 @@ const App: React.FC = () => {
       
       // Set new timeout for search
       searchTimeoutRef.current = setTimeout(() => {
-        searchEmployees(searchName);
+        searchRecords(searchName);
       }, AUTO_SEARCH_DELAY);
     }
     
@@ -159,7 +160,7 @@ const App: React.FC = () => {
     }
     
     setLoading(true);
-    searchEmployees(searchName);
+    searchRecords(searchName);
   };
 
   const clearSearch = (): void => {
@@ -173,11 +174,11 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await neonAPI.createEmployee(recordData);
+        await neonAPI.createRecord(recordData);
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.createRecord(recordData);
       } else if (apiType === ApiType.APPWRITE) {
-        await appwriteService.createRow(recordData);
+        await appwriteService.createRecord(recordData);
       } else {
         await googleSheetsAPI.createRecord(recordData);
       }
@@ -197,11 +198,11 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await neonAPI.updateEmployee(Number(id), recordData);
+        await neonAPI.updateRecord(Number(id), recordData);
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.updateRecord(Number(id), recordData);
       } else if (apiType === ApiType.APPWRITE) {
-        await appwriteService.updateRow(id, recordData);
+        await appwriteService.updateRecord(id, recordData);
       } else {
         await googleSheetsAPI.updateRecord(Number(id), recordData);
       }
@@ -225,11 +226,11 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await neonAPI.deleteEmployee(Number(id));
+        await neonAPI.deleteRecord(Number(id));
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.deleteRecord(Number(id));
       } else if (apiType === ApiType.APPWRITE) {
-        await appwriteService.deleteRow(id);
+        await appwriteService.deleteRecord(id);
       } else {
         await googleSheetsAPI.deleteRecord(Number(id));
       }
@@ -442,7 +443,16 @@ const App: React.FC = () => {
             
             {/* Record Form */}
             <div className="mt-10">
-              <h2 className="text-2xl font-bold mb-4">{editingRecord ? 'Edit Record' : 'Add New Record'}</h2>
+              <div className="flex justify-between">
+                <h2 className="text-2xl font-bold mb-4">{editingRecord ? 'Edit Record' : 'Add New Record'}</h2>
+                {!editingRecord && <button
+                  onClick={() => handleEdit(DEFAULT_RECORD)}
+                  className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                  disabled={loading}
+                >
+                  Create mock data
+                </button>}
+              </div>
               <RecordForm 
                 record={editingRecord}
                 onSubmit={editingRecord ? 
@@ -457,6 +467,8 @@ const App: React.FC = () => {
           </>
         ) : activePage === 'gallery' ? (
           <ImageGallery activePage={activePage} />
+        ) : activePage === 'load-test' ? (
+          <LoadTestNavigator activePage={activePage} />
         ) : (
           <FirebaseTest activePage={activePage} />
         )}

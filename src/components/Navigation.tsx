@@ -54,6 +54,17 @@ const Navigation: React.FC<NavigationProps> = ({
               >
                 Firebase Test
               </button>
+              
+              <button 
+                onClick={() => onNavigate('load-test')}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  activePage === 'load-test' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                Load Test
+              </button>
             </div>
           </div>
           
@@ -120,6 +131,17 @@ const Navigation: React.FC<NavigationProps> = ({
               }`}
             >
               Firebase Test
+            </button>
+            
+            <button 
+              onClick={() => onNavigate('load-test')}
+              className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left ${
+                activePage === 'load-test' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              Load Test
             </button>
           </div>
         </div>

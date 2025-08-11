@@ -184,7 +184,7 @@ class NeonAPIService {
   /**
    * CREATE - Add a new employee record
    */
-  async createEmployee(employeeData: Omit<Record, 'id'>): Promise<Record> {
+  async createRecord(employeeData: Omit<Record, 'id'>): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'POST',
@@ -206,7 +206,7 @@ class NeonAPIService {
   /**
    * READ - Get all employee records
    */
-  async getAllEmployees(cancelToken?: CancelToken): Promise<Record[]> {
+  async getAllRecords(cancelToken?: CancelToken): Promise<Record[]> {
     try {
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
@@ -230,7 +230,7 @@ class NeonAPIService {
   /**
    * READ - Get a specific employee by ID
    */
-  async getEmployee(id: string): Promise<Record> {
+  async getRecordById(id: string): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<Record>(
         'GET',
@@ -251,7 +251,7 @@ class NeonAPIService {
   /**
    * UPDATE - Update an existing employee record
    */
-  async updateEmployee(id: number, employeeData: Omit<Record, 'id'>): Promise<Record> {
+  async updateRecord(id: number, employeeData: Omit<Record, 'id'>): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'PATCH',
@@ -273,7 +273,7 @@ class NeonAPIService {
   /**
    * DELETE - Remove an employee record
    */
-  async deleteEmployee(id: number): Promise<Record> {
+  async deleteRecord(id: number): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'DELETE',
@@ -294,7 +294,7 @@ class NeonAPIService {
   /**
    * SEARCH - Search employees by criteria
    */
-  async searchEmployees(criteria: {
+  async searchRecords(criteria: {
     name?: string;
     email?: string;
     department?: string;

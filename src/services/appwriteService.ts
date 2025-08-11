@@ -172,7 +172,7 @@ export class AppwriteService {
    * Get all rows from Appwrite Database
    * @returns Promise with the list of rows
    */
-  async getAllRows() {
+  async getAllRecords() {
     try {
       const result = await database.listDocuments(this.databaseId, this.collectionId);
       return result.documents as unknown as RecordAppwrite[];
@@ -186,7 +186,7 @@ export class AppwriteService {
    * Search rows in Appwrite Database
    * @returns Promise with the list of rows
    */
-  async searchRows(query: string) {
+  async searchRecords(query: string) {
     try {
       const result = await database.listDocuments(this.databaseId, this.collectionId, [
         Query.search('name', query),
@@ -203,7 +203,7 @@ export class AppwriteService {
    * @param id ID of the row to get
    * @returns Promise with the row data
    */
-  async getRowById(id: string) {
+  async getRecordById(id: string) {
     try {
       const result = await database.getDocument(this.databaseId, this.collectionId, id);
       return result as unknown as RecordAppwrite;
@@ -218,9 +218,9 @@ export class AppwriteService {
    * @param data Data to create the row with
    * @returns Promise with the created row data
    */
-  async createRow(data: Omit<Record, 'id'>) {
+  async createRecord(data: Omit<Record, 'id'>) {
     try {
-      const rows = await this.getAllRows();
+      const rows = await this.getAllRecords();
       const nextId = rows[rows.length - 1]?.id + 1 || 1;
       const result = await database.createDocument(this.databaseId, this.collectionId, ID.unique(), { ...data, id: nextId, status: 1 });
       return result as unknown as RecordAppwrite;
@@ -236,7 +236,7 @@ export class AppwriteService {
    * @param data Data to update the row with
    * @returns Promise with the updated row data
    */
-  async updateRow(id: string | number, data: Omit<RecordAppwrite, 'id' | '$id' | '$sequence' | '$createdAt' | '$updatedAt' | '$permissions' | '$collectionId' | '$databaseId'>) {
+  async updateRecord(id: string | number, data: Omit<RecordAppwrite, 'id' | '$id' | '$sequence' | '$createdAt' | '$updatedAt' | '$permissions' | '$collectionId' | '$databaseId'>) {
     try {
       const result = await database.updateDocument(this.databaseId, this.collectionId, id.toString(), data);
       return result as unknown as RecordAppwrite;
@@ -251,7 +251,7 @@ export class AppwriteService {
    * @param id ID of the row to delete
    * @returns Promise<boolean> true if deletion was successful
    */
-  async deleteRow(id: string | number) {
+  async deleteRecord(id: string | number) {
     try {
       await database.deleteDocument(this.databaseId, this.collectionId, id.toString());
       return true;

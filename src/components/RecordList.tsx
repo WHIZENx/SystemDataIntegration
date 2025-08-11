@@ -104,7 +104,14 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
               <tr key={record.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {record.profile_image && imageUrls[record.profile_image] ? (
-                    <img src={imageUrls[record.profile_image]} alt="Profile" className="w-16 h-16 rounded-full object-cover"/>
+                    <img 
+                      src={imageUrls[record.profile_image]} 
+                      alt="Profile" 
+                      className="w-16 h-16 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '';
+                      }}
+                    />
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                       <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

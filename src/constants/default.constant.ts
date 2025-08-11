@@ -3,7 +3,7 @@ import { Record } from "../models/record.model";
 
 export const TABLE_NAME = "employees";
 
-export const DEFAULT_EMPLOYEE: Record = {
+export const DEFAULT_RECORD: Record = {
   id: 0,
   name: '',
   email: '',
