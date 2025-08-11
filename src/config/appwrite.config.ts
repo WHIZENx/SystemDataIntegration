@@ -1,4 +1,4 @@
-import { Client, Storage, ID, Account } from 'appwrite';
+import { Client, Storage, ID, Account, Databases } from 'appwrite';
 
 // Initialize Appwrite Client
 const client = new Client();
@@ -8,6 +8,9 @@ const account = new Account(client);
 
 // Initialize Appwrite Storage
 const storage = new Storage(client);
+
+// Initialize Appwrite Database
+const database = new Databases(client);
 
 client
     .setEndpoint(`https://${process.env.REACT_APP_APPWRITE_REGION}.cloud.appwrite.io/v1`)
@@ -44,4 +47,4 @@ const createAnonymousSession = async () => {
 })();
 
 // Export configured Appwrite client and services
-export { client, storage, account, ID, createAnonymousSession };
+export { client, storage, account, ID, createAnonymousSession, database };

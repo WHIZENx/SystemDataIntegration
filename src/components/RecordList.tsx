@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Record } from '../models/record.model';
-import { appwriteStorageService } from '../services/appwriteStorageService';
+import { appwriteService } from '../services/appwriteService';
+import { ApiType } from '../enums/api-type.enum';
+import { RecordAppwrite } from '../models/app-write.model';
 
 interface RecordListProps {
   records: Record[];
   onEdit: (record: Record) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: number | string) => void;
   loading: boolean;
+  apiType: ApiType;
 }
 
 const loadImagePreview = async (fileId: string) => {
     try {
       if (fileId) {
-        const imageUrl = await appwriteStorageService.viewImage(fileId);
+        const imageUrl = await appwriteService.viewImage(fileId);
         return imageUrl;
       }
     } catch (error) {
@@ -20,7 +23,7 @@ const loadImagePreview = async (fileId: string) => {
     }
   };
 
-const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, loading }) => {
+const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, loading, apiType }) => {
   const [imageUrls, setImageUrls] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
@@ -140,7 +143,7 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
                       </svg>
                     </button>
                     <button
-                      onClick={() => onDelete(record.id || index)}
+                      onClick={() => onDelete(apiType === ApiType.APPWRITE ? (record as RecordAppwrite).$id : record.id || index)}
                       disabled={loading}
                       className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
                       title="Delete record"

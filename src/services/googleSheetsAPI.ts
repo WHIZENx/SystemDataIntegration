@@ -416,4 +416,4 @@ class GoogleSheetsAPIService {
 }
 
 // Export a singleton instance
-export const GoogleSheetsAPI = new GoogleSheetsAPIService();
+export const googleSheetsAPI = new GoogleSheetsAPIService();

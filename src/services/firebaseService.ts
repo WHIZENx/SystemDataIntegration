@@ -70,7 +70,8 @@ export class FirebaseService {
     // Create new record with the generated ID
     const newRecord: Record = {
       id: nextId,
-      ...record
+      ...record,
+      status: 1,
     };
     
     // Save to Firebase using the numeric ID as the key

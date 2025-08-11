@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FormData, FormErrors, RecordFormProps } from '../models/record.model';
-import { appwriteStorageService } from '../services/appwriteStorageService';
+import { appwriteService } from '../services/appwriteService';
 
 const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loading, init }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -91,7 +91,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
     try {
       setPrevProfileImage(fileId);
       if (fileId) {
-        const imageUrl = await appwriteStorageService.viewImage(fileId);
+        const imageUrl = await appwriteService.viewImage(fileId);
         setImagePreview(imageUrl);
       }
     } catch (error) {
@@ -145,14 +145,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
       // Handle image upload if there's a new image
       if (imageFile) {
         // Upload new image
-        const uploadResult = await appwriteStorageService.uploadImage(imageFile);
+        const uploadResult = await appwriteService.uploadImage(imageFile);
         updatedFormData.profile_image = uploadResult.id;
       }
 
       // Handle image deletion if image was removed and there was a previous image
       if ((prevProfileImage || !imageFile) && prevProfileImage !== updatedFormData.profile_image) {
         // Delete the old image if needed
-        await appwriteStorageService.deleteImage(prevProfileImage);
+        await appwriteService.deleteImage(prevProfileImage);
       }
 
       // If same old image, just keep the ID

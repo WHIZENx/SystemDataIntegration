@@ -1,19 +1,27 @@
-import { storage, ID } from '../config/appwrite.config';
+import { storage, ID, database } from '../config/appwrite.config';
 import { v4 as uuidv4 } from 'uuid';
-import { StorageImage } from '../models/app-write.model';
+import { RecordAppwrite, StorageImage } from '../models/app-write.model';
+import { Record } from '../models/record.model';
+import { Query } from 'appwrite';
 
 /**
  * Appwrite Storage Service for image operations
  */
-export class AppwriteStorageService {
+export class AppwriteService {
   private bucketId: string;
+  private databaseId: string;
+  private collectionId: string;
 
   /**
-   * Constructor for AppwriteStorageService
+   * Constructor for AppwriteService
    * @param bucketId The ID of the Appwrite storage bucket (default: from APPWRITE_BUCKET_ID)
+   * @param databaseId The ID of the Appwrite database (default: from APPWRITE_DATABASE_ID)
+   * @param collectionId The ID of the Appwrite collection (default: from APPWRITE_COLLECTION_ID)
    */
-  constructor(bucketId: string = process.env.REACT_APP_APPWRITE_BUCKET_ID || '') {
+  constructor(bucketId: string = process.env.REACT_APP_APPWRITE_BUCKET_ID || '', databaseId: string = process.env.REACT_APP_APPWRITE_DATABASE_ID || '', collectionId: string = process.env.REACT_APP_APPWRITE_COLLECTION_ID || '') {
     this.bucketId = bucketId;
+    this.databaseId = databaseId;
+    this.collectionId = collectionId;
   }
 
   /**
@@ -159,8 +167,101 @@ export class AppwriteStorageService {
       throw new Error(`Failed to preview image: ${error}`);
     }
   }
+
+  /**
+   * Get all rows from Appwrite Database
+   * @returns Promise with the list of rows
+   */
+  async getAllRows() {
+    try {
+      const result = await database.listDocuments(this.databaseId, this.collectionId);
+      return result.documents as unknown as RecordAppwrite[];
+    } catch (error) {
+      console.error('Error getting all rows:', error);
+      throw new Error(`Failed to get all rows: ${error}`);
+    }
+  }
+
+  /**
+   * Search rows in Appwrite Database
+   * @returns Promise with the list of rows
+   */
+  async searchRows(query: string) {
+    try {
+      const result = await database.listDocuments(this.databaseId, this.collectionId, [
+        Query.search('name', query),
+      ]);
+      return result.documents as unknown as RecordAppwrite[];
+    } catch (error) {
+      console.error('Error searching rows:', error);
+      throw new Error(`Failed to search rows: ${error}`);
+    }
+  }
+
+  /**
+   * Get a row by ID from Appwrite Database
+   * @param id ID of the row to get
+   * @returns Promise with the row data
+   */
+  async getRowById(id: string) {
+    try {
+      const result = await database.getDocument(this.databaseId, this.collectionId, id);
+      return result as unknown as RecordAppwrite;
+    } catch (error) {
+      console.error('Error getting row by id:', error);
+      throw new Error(`Failed to get row by id: ${error}`);
+    }
+  }
+
+  /**
+   * Create a new row in Appwrite Database
+   * @param data Data to create the row with
+   * @returns Promise with the created row data
+   */
+  async createRow(data: Omit<Record, 'id'>) {
+    try {
+      const rows = await this.getAllRows();
+      const nextId = rows[rows.length - 1]?.id + 1 || 1;
+      const result = await database.createDocument(this.databaseId, this.collectionId, ID.unique(), { ...data, id: nextId, status: 1 });
+      return result as unknown as RecordAppwrite;
+    } catch (error) {
+      console.error('Error creating row:', error);
+      throw new Error(`Failed to create row: ${error}`);
+    }
+  }
+
+  /**
+   * Update a row in Appwrite Database
+   * @param id ID of the row to update
+   * @param data Data to update the row with
+   * @returns Promise with the updated row data
+   */
+  async updateRow(id: string | number, data: Omit<RecordAppwrite, 'id' | '$id' | '$sequence' | '$createdAt' | '$updatedAt' | '$permissions' | '$collectionId' | '$databaseId'>) {
+    try {
+      const result = await database.updateDocument(this.databaseId, this.collectionId, id.toString(), data);
+      return result as unknown as RecordAppwrite;
+    } catch (error) {
+      console.error('Error updating row:', error);
+      throw new Error(`Failed to update row: ${error}`);
+    }
+  }
+
+  /**
+   * Delete a row from Appwrite Database
+   * @param id ID of the row to delete
+   * @returns Promise<boolean> true if deletion was successful
+   */
+  async deleteRow(id: string | number) {
+    try {
+      await database.deleteDocument(this.databaseId, this.collectionId, id.toString());
+      return true;
+    } catch (error) {
+      console.error('Error deleting row:', error);
+      throw new Error(`Failed to delete row: ${error}`);
+    }
+  }
     
 }
 
 // Export a singleton instance of the service
-export const appwriteStorageService = new AppwriteStorageService();
+export const appwriteService = new AppwriteService();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios, { CancelTokenSource } from 'axios';
-import { GoogleSheetsAPI } from './services/googleSheetsAPI';
-import { NeonAPI } from './services/neonAPI';
+import { googleSheetsAPI } from './services/googleSheetsAPI';
+import { neonAPI } from './services/neonAPI';
 import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
@@ -12,7 +12,8 @@ import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
 import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, IS_AUTO_SEARCH } from './constants/default.constant';
-import { appwriteStorageService } from './services/appwriteStorageService';
+import { appwriteService } from './services/appwriteService';
+import { RecordAppwrite } from './models/app-write.model';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -68,13 +69,16 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (loadApiType === ApiType.NEON) {
-        const data = await NeonAPI.getAllEmployees(cancelToken);
+        const data = await neonAPI.getAllEmployees(cancelToken);
         setRecords(data);
       } else if (loadApiType === ApiType.FIREBASE) {
         const data = await firebaseService.getAllRecords();
         setRecords(data);
+      } else if (loadApiType === ApiType.APPWRITE) {
+        const data = await appwriteService.getAllRows();
+        setRecords(data);
       } else {
-        const data = await GoogleSheetsAPI.getAllRecords(cancelToken);
+        const data = await googleSheetsAPI.getAllRecords(cancelToken);
         setRecords(data);
       }
     } catch (err: any) {
@@ -100,14 +104,17 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        const data = await NeonAPI.searchEmployees({ name: name.trim() });
+        const data = await neonAPI.searchEmployees({ name: name.trim() });
         setRecords(data);
       } else if (apiType === ApiType.FIREBASE) {
         const data = await firebaseService.findRecordsByField('name', name.trim(), DEFAULT_QUERY_TYPE);
         setRecords(data);
+      } else if (apiType === ApiType.APPWRITE) {
+        const data = await appwriteService.searchRows(name.trim());
+        setRecords(data);
       } else {
         // For Google Sheets, filter locally
-        const allData = await GoogleSheetsAPI.getAllRecords();
+        const allData = await googleSheetsAPI.getAllRecords();
         const filtered = allData.filter(record => 
           record.name.toLowerCase().includes(name.toLowerCase())
         );
@@ -166,11 +173,13 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await NeonAPI.createEmployee(recordData);
+        await neonAPI.createEmployee(recordData);
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.createRecord(recordData);
+      } else if (apiType === ApiType.APPWRITE) {
+        await appwriteService.createRow(recordData);
       } else {
-        await GoogleSheetsAPI.createRecord(recordData);
+        await googleSheetsAPI.createRecord(recordData);
       }
       setEditingRecord(null);
       await loadRecords(apiType); // Refresh the list
@@ -182,17 +191,19 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpdate = async (id: number, recordData: Omit<Record, 'id'>): Promise<void> => {
+  const handleUpdate = async (id: number | string, recordData: Omit<Record, 'id'>): Promise<void> => {
     setLoading(true);
     setError('');
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await NeonAPI.updateEmployee(id, recordData);
+        await neonAPI.updateEmployee(Number(id), recordData);
       } else if (apiType === ApiType.FIREBASE) {
-        await firebaseService.updateRecord(id, recordData);
+        await firebaseService.updateRecord(Number(id), recordData);
+      } else if (apiType === ApiType.APPWRITE) {
+        await appwriteService.updateRow(id, recordData);
       } else {
-        await GoogleSheetsAPI.updateRecord(id, recordData);
+        await googleSheetsAPI.updateRecord(Number(id), recordData);
       }
       setEditingRecord(null);
       await loadRecords(apiType); // Refresh the list
@@ -204,7 +215,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number): Promise<void> => {
+  const handleDelete = async (id: number | string): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this record?')) {
       return;
     }
@@ -214,15 +225,17 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await NeonAPI.deleteEmployee(id);
+        await neonAPI.deleteEmployee(Number(id));
       } else if (apiType === ApiType.FIREBASE) {
-        await firebaseService.deleteRecord(id);
+        await firebaseService.deleteRecord(Number(id));
+      } else if (apiType === ApiType.APPWRITE) {
+        await appwriteService.deleteRow(id);
       } else {
-        await GoogleSheetsAPI.deleteRecord(id);
+        await googleSheetsAPI.deleteRecord(Number(id));
       }
-      const record = records.find((record) => record.id === id);
+      const record = records.find((record) => (apiType === ApiType.APPWRITE ? (record as RecordAppwrite).$id : record.id) === id);
       if (record && record.profile_image) {
-        await appwriteStorageService.deleteImage(record.profile_image);
+        await appwriteService.deleteImage(record.profile_image);
       }
       await loadRecords(apiType); // Refresh the list
       setSuccess('Record deleted successfully');
@@ -247,11 +260,11 @@ const App: React.FC = () => {
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        await NeonAPI.createDbEmployee();
+        await neonAPI.createDbEmployee();
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.initDatabaseStructure();
       } else {
-        await GoogleSheetsAPI.initSheet();
+        await googleSheetsAPI.initSheet();
       }
       setSuccess('Employee table created successfully');
     } catch (err) {
@@ -328,9 +341,15 @@ const App: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => onSetApiType(ApiType.FIREBASE)}
-                  className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.FIREBASE ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} rounded-r-lg`}
+                  className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.FIREBASE ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
                 >
                   Firebase
+                </button>
+                <button 
+                  onClick={() => onSetApiType(ApiType.APPWRITE)}
+                  className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.APPWRITE ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} rounded-r-lg`}
+                >
+                  Appwrite
                 </button>
               </div>
             </div>
@@ -403,17 +422,18 @@ const App: React.FC = () => {
                 setError={setError}
                 setSuccess={setSuccess}
               />
-              <button
+              {apiType !== ApiType.APPWRITE && <button
                 onClick={handleCreateEmployeeTable}
                 className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
                 disabled={loading}
               >
                 Create Table
-              </button>
+              </button>}
             </div>
 
             {/* Record List */}
-            <RecordList 
+            <RecordList
+              apiType={apiType}
               records={records} 
               onEdit={handleEdit} 
               onDelete={handleDelete}
@@ -426,7 +446,7 @@ const App: React.FC = () => {
               <RecordForm 
                 record={editingRecord}
                 onSubmit={editingRecord ? 
-                  (data) => handleUpdate(editingRecord.id, data) : 
+                  (data) => handleUpdate(apiType === ApiType.APPWRITE ? (editingRecord as RecordAppwrite).$id : editingRecord.id, data) : 
                   handleCreate
                 }
                 onCancel={editingRecord ? handleCancelEdit : null}

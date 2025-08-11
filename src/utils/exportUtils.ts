@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { Record } from '../models/record.model';
-import { GoogleSheetsAPI } from '../services/googleSheetsAPI';
+import { googleSheetsAPI } from '../services/googleSheetsAPI';
 
 /**
  * Format records for export with proper casing
@@ -44,7 +44,7 @@ export const exportToGoogleSheets = async (records: Record[]): Promise<Record[]>
   }));
 
   // Export to Google Sheets
-  return await GoogleSheetsAPI.modifyMultipleRecords(exportData);
+  return await googleSheetsAPI.modifyMultipleRecords(exportData);
 };
 
 /**

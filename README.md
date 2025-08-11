@@ -4,7 +4,7 @@ A modern, responsive employee management application built with React and TypeSc
 1. Google Sheets (using Google Sheets API)
 2. Neon Database (PostgreSQL serverless database)
 3. Firebase (Realtime Database)
-4. Appwrite (Cloud storage for files/images)
+4. Appwrite (Cloud storage for files/images, Database)
 
 ## 📋 Features
 
@@ -81,6 +81,8 @@ REACT_APP_FIREBASE_DATABASE_URL=your_firebase_database_url
 REACT_APP_APPWRITE_ENDPOINT=your_appwrite_endpoint
 REACT_APP_APPWRITE_PROJECT_ID=your_appwrite_project_id
 REACT_APP_APPWRITE_BUCKET_ID=your_appwrite_bucket_id
+REACT_APP_APPWRITE_COLLECTION_ID=your_appwrite_collection_id
+REACT_APP_APPWRITE_DATABASE_ID=your_appwrite_database_id
 ```
 
 ### Constants Variables
@@ -201,7 +203,7 @@ export const DEFAULT_QUERY_TYPE = QUERY_TYPE.CONTAINS; // Default query type
    - The application automatically initializes the database structure
    - No manual setup required for the data structure
 
-### Appwrite Storage Setup
+### Appwrite Storage and Database Setup
 
 1. **Create Appwrite Account and Project**:
    - Sign up at [Appwrite](https://appwrite.io/)
@@ -224,6 +226,24 @@ export const DEFAULT_QUERY_TYPE = QUERY_TYPE.CONTAINS; // Default query type
    - Make sure your Appwrite instance has appropriate CORS settings
    - Add your frontend URL to the allowed origins
 
+5. **Create Database**:
+   - Go to your project > Databases
+   - Create a new database for storing employee records
+   - Configure database permissions:
+     - Enable read access for all users
+     - Restrict write access to authenticated users
+   - Copy the database ID from the database you created
+   - Add this value to your `.env` file
+
+6. **Create Collection**:
+   - Go to your project > Databases
+   - Create a new collection for storing employee records
+   - Configure collection permissions:
+     - Enable read access for all users
+     - Restrict write access to authenticated users
+   - Copy the collection ID from the collection you created
+   - Add this value to your `.env` file
+
 ### Local Development
 
 1. Clone the repository
@@ -237,16 +257,16 @@ export const DEFAULT_QUERY_TYPE = QUERY_TYPE.CONTAINS; // Default query type
 ### Google Sheets API
 
 ```typescript
-import { GoogleSheetsAPI } from './services/googleSheetsAPI';
+import { googleSheetsAPI } from './services/googleSheetsAPI';
 
 // Initialize sheet (creates headers if needed)
-await GoogleSheetsAPI.initSheet();
+await googleSheetsAPI.initSheet();
 
 // Get all records
-const records = await GoogleSheetsAPI.getAllRecords();
+const records = await googleSheetsAPI.getAllRecords();
 
 // Create new record
-const newRecord = await GoogleSheetsAPI.createRecord({
+const newRecord = await googleSheetsAPI.createRecord({
   name: 'John Doe',
   email: 'john@example.com',
   phone: '555-0100',
@@ -259,28 +279,28 @@ const newRecord = await GoogleSheetsAPI.createRecord({
 });
 
 // Update existing record
-await GoogleSheetsAPI.updateRecord(1, {
+await googleSheetsAPI.updateRecord(1, {
   name: 'John Doe Updated',
   position: 'Senior Developer'
 });
 
 // Delete a record
-await GoogleSheetsAPI.deleteRecord(1);
+await googleSheetsAPI.deleteRecord(1);
 ```
 
 ### Neon Database API
 
 ```typescript
-import { NeonAPI } from './services/neonAPI';
+import { neonAPI } from './services/neonAPI';
 
 // Initialize database (creates table if needed)
-await NeonAPI.createDbEmployee();
+await neonAPI.createDbEmployee();
 
 // Get all employees
-const employees = await NeonAPI.getAllEmployees();
+const employees = await neonAPI.getAllEmployees();
 
 // Create new employee
-const newEmployee = await NeonAPI.createEmployee({
+const newEmployee = await neonAPI.createEmployee({
   name: 'Jane Smith',
   email: 'jane@example.com',
   phone: '555-0200',
@@ -293,13 +313,13 @@ const newEmployee = await NeonAPI.createEmployee({
 });
 
 // Update employee
-await NeonAPI.updateEmployee(1, {
+await neonAPI.updateEmployee(1, {
   department: 'Product Marketing',
   position: 'Senior Manager'
 });
 
 // Delete employee
-await NeonAPI.deleteEmployee(1);
+await neonAPI.deleteEmployee(1);
 ```
 
 ### Firebase Database
@@ -340,9 +360,9 @@ await firebaseService.deleteRecord(1);
 ### Appwrite Storage
 
 ```typescript
-import { AppwriteStorageService } from './services/appwriteStorageService';
+import { AppwriteService } from './services/appwriteService';
 
-const storageService = new AppwriteStorageService();
+const storageService = new AppwriteService();
 
 // Upload image
 const file = new File([/* your file data */], 'profile.jpg', { type: 'image/jpeg' });
@@ -356,6 +376,36 @@ const allImages = await storageService.getAllImages();
 
 // Delete image
 await storageService.deleteImage(uploadedImage.id);
+
+const databaseService = new AppwriteService();
+
+// Get all rows
+await databaseService.getAllRows();
+
+// Search rows
+await databaseService.searchRows('John');
+
+// Create row
+await databaseService.createRow({
+  name: 'John Doe',
+  email: 'john@example.com',
+  phone: '555-0100',
+  department: 'Engineering',
+  position: 'Developer',
+  profile_image: '',
+  status: 1,
+  created_at: '2025-08-11T00:53:38.000Z',
+  updated_at: '2025-08-11T00:53:38.000Z',
+});
+
+// Update row
+await databaseService.updateRow('1', {
+  name: 'John Doe Updated',
+  position: 'Senior Developer'
+});
+
+// Delete row
+await databaseService.deleteRow('1');
 ```
 
 ## 🛠 Available Scripts

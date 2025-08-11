@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { appwriteStorageService } from '../services/appwriteStorageService';
+import { appwriteService } from '../services/appwriteService';
 import { StorageImage } from '../models/app-write.model';
 import { createAnonymousSession } from '../config/appwrite.config';
 import { AUTO_UPLOAD_DELAY, AUTO_UPLOAD_PROGRESS_DELAY, IS_AUTO_UPLOAD } from '../constants/default.constant';
@@ -44,7 +44,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const loadImages = async () => {
     try {
       setLoading(true);
-      const imagesList = await appwriteStorageService.getAllImages();
+      const imagesList = await appwriteService.getAllImages();
       setImages(imagesList);
       setError('');
     } catch (err) {
@@ -87,7 +87,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
         }, AUTO_UPLOAD_PROGRESS_DELAY);
         
         // Upload the file
-        await appwriteStorageService.uploadImage(file);
+        await appwriteService.uploadImage(file);
         
         clearInterval(progressInterval);
         setUploadProgress(100);
@@ -118,7 +118,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
     const file = imageFile;
     try {
       setUploading(true);
-      await appwriteStorageService.uploadImage(file);
+      await appwriteService.uploadImage(file);
       await loadImages();
 
       if (fileInputRef.current) {
@@ -142,7 +142,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
     
     try {
       setLoading(true);
-      await appwriteStorageService.deleteImage(image.id);
+      await appwriteService.deleteImage(image.id);
       
       // Update the images list after deletion
       setImages(images.filter(img => img.id !== image.id));
@@ -159,7 +159,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const handleDownloadImage = async (image: StorageImage) => {
     try {
       // Get download URL from service
-      const downloadUrl = await appwriteStorageService.downloadImage(image.id);
+      const downloadUrl = await appwriteService.downloadImage(image.id);
       
       // Create a temporary anchor element and trigger download
       const link = document.createElement('a');
@@ -178,7 +178,7 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
   const handleViewImage = async (image: StorageImage) => {
     try {
       // Get view URL from service
-      const viewUrl = await appwriteStorageService.viewImage(image.id);
+      const viewUrl = await appwriteService.viewImage(image.id);
       
       window.open(viewUrl, '_blank');
     } catch (err) {

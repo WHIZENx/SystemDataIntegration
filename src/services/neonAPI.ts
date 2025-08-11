@@ -189,7 +189,7 @@ class NeonAPIService {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'POST',
         `/${TABLE_NAME}`,
-        employeeData
+        { ...employeeData, status: 1 }
       );
 
       if (result.error) {
@@ -337,4 +337,4 @@ class NeonAPIService {
 }
 
 // Export a singleton instance
-export const NeonAPI = new NeonAPIService();
+export const neonAPI = new NeonAPIService();
