@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useModal } from '../contexts/ModalContext';
 import { firebaseService } from '../services/firebaseService';
 import { appwriteService } from '../services/appwriteService';
 import { googleSheetsAPI } from '../services/googleSheetsAPI';
@@ -35,6 +36,7 @@ interface ServiceInterface {
  * A test page for testing CRUD operations across different services
  */
 const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
+  const { showConfirmation } = useModal();
   // State
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(false);
@@ -200,7 +202,8 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
     }
   };
   
-  const handleSearch = async () => {
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
     setSuccess('');
     const service = getService();
@@ -419,38 +422,40 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
         
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Search Records</h2>
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <select
-                value={searchField}
-                onChange={(e) => setSearchField(e.target.value)}
-                className="w-1/3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <form onSubmit={handleSearch}>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <select
+                  value={searchField}
+                  onChange={(e) => setSearchField(e.target.value)}
+                  className="w-1/3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                >
+                  <option value="name">Name</option>
+                  <option value="email">Email</option>
+                  <option value="department">Department</option>
+                  <option value="position">Position</option>
+                </select>
+                
+                <input
+                  type="text"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder="Search value"
+                  className="w-2/3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow transition-colors disabled:bg-blue-300"
                 disabled={loading}
               >
-                <option value="name">Name</option>
-                <option value="email">Email</option>
-                <option value="department">Department</option>
-                <option value="position">Position</option>
-              </select>
-              
-              <input
-                type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search value"
-                className="w-2/3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              />
+                Search
+              </button>
             </div>
-            
-            <button
-              onClick={handleSearch}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded shadow transition-colors disabled:bg-blue-300"
-              disabled={loading}
-            >
-              Search
-            </button>
-          </div>
+          </form>
         </div>
       </div>
       
@@ -501,8 +506,16 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
                           Update
                         </button>
                         <button
-                          onClick={() => {
-                            if (window.confirm(`Are you sure you want to delete record #${record.id}?`)) {
+                          onClick={async () => {
+                            const confirmed = await showConfirmation({
+                              title: 'Confirm Deletion',
+                              message: `Are you sure you want to delete record #${record.id}?`,
+                              confirmText: 'Delete',
+                              cancelText: 'Cancel',
+                              type: 'danger'
+                            });
+                            
+                            if (confirmed) {
                               handleDeleteRecord(serviceType === 'appwrite' ? (record as RecordAppwrite).$id : record.id);
                             }
                           }}

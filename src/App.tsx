@@ -16,8 +16,10 @@ import { appwriteService } from './services/appwriteService';
 import { RecordAppwrite } from './models/app-write.model';
 import ServiceTest from './pages/ServiceTest';
 import { neonRawAPI } from './services/neonRawAPI';
+import { ModalProvider, useModal } from './contexts/ModalContext';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { showConfirmation } = useModal();
   const [init, setInit] = useState<boolean>(false);
   const [records, setRecords] = useState<Record[]>([]);
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
@@ -238,7 +240,15 @@ const App: React.FC = () => {
   };
 
   const handleDelete = async (id: number | string): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this record?')) {
+    const confirmed = await showConfirmation({
+      title: 'Confirm Deletion',
+      message: 'Are you sure you want to delete this record?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+    
+    if (!confirmed) {
       return;
     }
     
@@ -515,6 +525,14 @@ const App: React.FC = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ModalProvider>
+      <AppContent />
+    </ModalProvider>
   );
 };
 

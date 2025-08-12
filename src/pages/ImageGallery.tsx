@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useModal } from '../contexts/ModalContext';
 import { appwriteService } from '../services/appwriteService';
 import { StorageImage } from '../models/app-write.model';
 import { createAnonymousSession } from '../config/appwrite.config';
 import { AUTO_UPLOAD_DELAY, AUTO_UPLOAD_PROGRESS_DELAY, IS_AUTO_UPLOAD } from '../constants/default.constant';
 
 const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
+  const { showConfirmation } = useModal();
   const [images, setImages] = useState<StorageImage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -136,7 +138,15 @@ const ImageGallery: React.FC<{ activePage: string }> = ({ activePage }) => {
 
   // Handle image deletion
   const handleDeleteImage = async (image: StorageImage) => {
-    if (!window.confirm(`Are you sure you want to delete "${image.name}"?`)) {
+    const confirmed = await showConfirmation({
+      title: 'Confirm Image Deletion',
+      message: `Are you sure you want to delete "${image.name}"?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+    
+    if (!confirmed) {
       return;
     }
     
