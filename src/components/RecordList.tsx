@@ -109,7 +109,8 @@ const RecordList: React.FC<RecordListProps> = ({ records, onEdit, onDelete, load
                       alt="Profile" 
                       className="w-16 h-16 rounded-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = '';
+                        // Use an inline SVG data URL as fallback for not found images
+                        e.currentTarget.src = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23f0f0f0"/%3E%3Cpath d="M30 40 L50 20 L70 40 M50 20 L50 60 M30 75 L70 75" stroke="%23999" stroke-width="4" fill="none"/%3E%3Ccircle cx="50" cy="85" r="3" fill="%23999"/%3E%3C/svg%3E';
                       }}
                     />
                   ) : (
