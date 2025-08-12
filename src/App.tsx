@@ -7,7 +7,7 @@ import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
 import Navigation from './components/Navigation';
 import ImageGallery from './pages/ImageGallery';
-import LoadTestNavigator from './pages/LoadTestNavigator';
+import LoadTestNavigator from './pages/LoadTest';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
@@ -15,6 +15,7 @@ import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, DEFAULT_RECORD, IS_AUTO_SEARCH }
 import { appwriteService } from './services/appwriteService';
 import { RecordAppwrite } from './models/app-write.model';
 import ServiceTest from './pages/ServiceTest';
+import { neonRawAPI } from './services/neonRawAPI';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -77,6 +78,9 @@ const App: React.FC = () => {
       if (loadApiType === ApiType.NEON) {
         const data = await neonAPI.getAllRecords(cancelToken);
         setRecords(data);
+      } else if (loadApiType === ApiType.NEON_RAW) {
+        const data = await neonRawAPI.getAllRecords();
+        setRecords(data);
       } else if (loadApiType === ApiType.FIREBASE) {
         const data = await firebaseService.getAllRecords();
         setRecords(data);
@@ -120,6 +124,9 @@ const App: React.FC = () => {
     try {
       if (apiType === ApiType.NEON) {
         const data = await neonAPI.searchRecords('name', name.trim(), cancelToken);
+        setRecords(data);
+      } else if (apiType === ApiType.NEON_RAW) {
+        const data = await neonRawAPI.searchRecords('name', name.trim());
         setRecords(data);
       } else if (apiType === ApiType.FIREBASE) {
         const data = await firebaseService.searchRecords('name', name.trim(), DEFAULT_QUERY_TYPE);
@@ -185,6 +192,8 @@ const App: React.FC = () => {
     try {
       if (apiType === ApiType.NEON) {
         await neonAPI.createRecord(recordData);
+      } else if (apiType === ApiType.NEON_RAW) {
+        await neonRawAPI.createRecord(recordData);
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.createRecord(recordData);
       } else if (apiType === ApiType.APPWRITE) {
@@ -209,6 +218,8 @@ const App: React.FC = () => {
     try {
       if (apiType === ApiType.NEON) {
         await neonAPI.updateRecord(Number(id), recordData);
+      } else if (apiType === ApiType.NEON_RAW) {
+        await neonRawAPI.updateRecord(Number(id), recordData);
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.updateRecord(Number(id), recordData);
       } else if (apiType === ApiType.APPWRITE) {
@@ -237,6 +248,8 @@ const App: React.FC = () => {
     try {
       if (apiType === ApiType.NEON) {
         await neonAPI.deleteRecord(Number(id));
+      } else if (apiType === ApiType.NEON_RAW) {
+        await neonRawAPI.deleteRecord(Number(id));
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.deleteRecord(Number(id));
       } else if (apiType === ApiType.APPWRITE) {
@@ -265,17 +278,19 @@ const App: React.FC = () => {
     setEditingRecord(null);
   };
 
-  const handleCreateEmployeeTable = async (): Promise<void> => {
+  const handleCreateTable = async (): Promise<void> => {
     setLoading(true);
     setError('');
     setSuccess('');
     try {
-      if (apiType === ApiType.NEON) {
-        await neonAPI.createDbEmployee();
+      if (apiType === ApiType.NEON_RAW) {
+        await neonRawAPI.createDbTable();
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.initDatabaseStructure();
-      } else {
+      } else if (apiType === ApiType.GOOGLE_SHEETS) {
         await googleSheetsAPI.initSheet();
+      } else if (apiType === ApiType.APPWRITE || apiType === ApiType.NEON) {
+        return;
       }
       setSuccess('Employee table created successfully');
     } catch (err) {
@@ -331,13 +346,13 @@ const App: React.FC = () => {
         onThemeToggle={toggleTheme}
         isDarkMode={!darkMode}
       />
-      
+
       <div className="container mx-auto px-4 py-8">
         {activePage === 'records' ? (
           <>
             {/* API Selection */}
             <div className="mb-6 flex justify-center">
-              <div className="inline-flex rounded-md shadow-sm" role="group">
+              <div className="inline-flex rounded-md shadow-sm overflow-x-auto" role="group">
                 <button 
                   onClick={() => onSetApiType(ApiType.GOOGLE_SHEETS)}
                   className={`px-4 py-2 text-sm font-medium border ${apiType === ApiType.GOOGLE_SHEETS ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'} rounded-l-lg`}
@@ -349,6 +364,12 @@ const App: React.FC = () => {
                   className={`px-4 py-2 text-sm font-medium border-t border-b ${apiType === ApiType.NEON ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
                 >
                   Neon DB
+                </button>
+                <button 
+                  onClick={() => onSetApiType(ApiType.NEON_RAW)}
+                  className={`px-4 py-2 text-sm font-medium border-t border-b ${apiType === ApiType.NEON_RAW ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                >
+                  Neon Raw DB
                 </button>
                 <button 
                   onClick={() => onSetApiType(ApiType.FIREBASE)}
@@ -433,8 +454,8 @@ const App: React.FC = () => {
                 setError={setError}
                 setSuccess={setSuccess}
               />
-              {apiType !== ApiType.APPWRITE && <button
-                onClick={handleCreateEmployeeTable}
+              {apiType !== ApiType.APPWRITE && apiType !== ApiType.NEON && <button
+                onClick={handleCreateTable}
                 className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
                 disabled={loading}
               >

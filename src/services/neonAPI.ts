@@ -5,7 +5,6 @@ import axios, { AxiosResponse, CancelToken } from 'axios';
 import { Record } from '../models/record.model';
 import { NeonAuthResponse, NeonAPIResponse } from '../models/neon.model';
 import { TABLE_NAME } from '../constants/default.constant';
-import { neon, NeonQueryFunction } from '@neondatabase/serverless';
 
 class NeonAPIService {
   private apiUrl: string;
@@ -17,7 +16,6 @@ class NeonAPIService {
   private authUserId: string;
   private currentAccessToken: string | null = null;
   private tokenExpiresAt: number = 0;
-  private db: NeonQueryFunction<any, any> | null = null;
 
   constructor() {
     // Load configuration from environment variables
@@ -29,38 +27,10 @@ class NeonAPIService {
     this.refreshToken = process.env.REACT_APP_NEON_REFRESH_TOKEN || '';
     this.authUserId = process.env.REACT_APP_NEON_AUTH_USER_ID || '';
 
-    if (process.env.REACT_APP_DB_URL) {
-      this.db = neon(process.env.REACT_APP_DB_URL);
-    }
-
     if (!this.apiUrl || !this.authUrl) {
       console.warn('NEON API configuration is incomplete. Some features may not work.');
     }
   }
-  
-  /**
-   * Create the 'employees' table if it doesn't exist
-   */
-  createDbEmployee = async () => {
-    if (!this.db) {
-      throw new Error('Database connection is not initialized');
-    }
-
-    const tableName = `CREATE TABLE IF NOT EXISTS "${TABLE_NAME}" (
-        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "${TABLE_NAME}_id_seq"),
-        "name" TEXT,
-        "email" TEXT,
-        "phone" TEXT,
-        "department" TEXT,
-        "position" TEXT,
-        "profile_image" TEXT,
-        "status" integer DEFAULT 0,
-        "created_at" TIMESTAMP DEFAULT NOW(),
-        "updated_at" TIMESTAMP DEFAULT NOW()
-      )`;
-    // Use the query method instead of sql template literal for DDL statements with identifiers
-    return await this.db(tableName);
-  };
 
   /**
    * Get a fresh access token from NEON Auth API
@@ -200,12 +170,12 @@ class NeonAPIService {
   /**
    * CREATE - Add a new employee record
    */
-  async createRecord(employeeData: Omit<Record, 'id'>): Promise<Record> {
+  async createRecord(recordData: Omit<Record, 'id'>): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<NeonAPIResponse>(
         'POST',
         `/${TABLE_NAME}`,
-        { ...employeeData, status: 1 }
+        { ...recordData, status: 1 }
       );
 
       if (result.error) {

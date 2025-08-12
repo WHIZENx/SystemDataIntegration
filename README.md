@@ -6,6 +6,7 @@ A modern, responsive employee management application built with React and TypeSc
 3. Firebase (Realtime Database)
 4. Appwrite (Cloud storage for files/images, Database)
 
+
 ## 📋 Features
 
 - **Complete CRUD Operations**: Create, read, update, and delete employee records
@@ -294,7 +295,7 @@ await googleSheetsAPI.deleteRecord(1);
 import { neonAPI } from './services/neonAPI';
 
 // Initialize database (creates table if needed)
-await neonAPI.createDbEmployee();
+await neonAPI.createDbTable();
 
 // Get all employees
 const employees = await neonAPI.getAllRecords();
@@ -320,6 +321,40 @@ await neonAPI.updateRecord(1, {
 
 // Delete employee
 await neonAPI.deleteRecord(1);
+```
+
+### Neon Raw Database API
+
+```typescript
+import { neonRawAPI } from './services/neonRawAPI';
+
+// Initialize database (creates table if needed)
+await neonRawAPI.createDbTable();
+
+// Get all employees
+const employees = await neonRawAPI.getAllRecords();
+
+// Create new employee
+const newEmployee = await neonRawAPI.createRecord({
+  name: 'Jane Smith',
+  email: 'jane@example.com',
+  phone: '555-0200',
+  department: 'Marketing',
+  position: 'Manager',
+  profile_image: '',
+  status: 1,
+  created_at: '2025-08-11T00:53:38.000Z',
+  updated_at: '2025-08-11T00:53:38.000Z',
+});
+
+// Update employee
+await neonRawAPI.updateRecord(1, {
+  department: 'Product Marketing',
+  position: 'Senior Manager'
+});
+
+// Delete employee
+await neonRawAPI.deleteRecord(1);
 ```
 
 ### Firebase Database
@@ -357,7 +392,7 @@ await firebaseService.updateRecord(1, {
 await firebaseService.deleteRecord(1);
 ```
 
-### Appwrite Storage
+### Appwrite Storage and Database
 
 ```typescript
 import { AppwriteService } from './services/appwriteService';

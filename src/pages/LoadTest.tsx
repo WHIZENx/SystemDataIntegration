@@ -76,6 +76,8 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
         return 'Firebase Service';
       case ApiType.NEON:
         return 'NEON API';
+      case ApiType.NEON_RAW:
+        return 'NEON Raw API';
       default:
         return 'Unknown Service';
     }
@@ -167,7 +169,7 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
 
   return (
     <div className="container mx-auto px-4">
-      <h1 className="text-2xl font-bold mb-6">Load Test Navigator</h1>
+      <h1 className="text-2xl font-bold mb-6">Load Test</h1>
       
       {/* Error and success messages */}
       {error && (
@@ -202,6 +204,7 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
               <option value={ApiType.APPWRITE}>Appwrite Service</option>
               <option value={ApiType.FIREBASE}>Firebase Service</option>
               <option value={ApiType.NEON}>NEON API</option>
+              <option value={ApiType.NEON_RAW}>NEON Raw API</option>
             </select>
           </div>
           

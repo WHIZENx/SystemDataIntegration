@@ -8,6 +8,7 @@ import { neonAPI } from './neonAPI';
 import { ApiType } from '../enums/api-type.enum';
 import { Record } from '../models/record.model';
 import { RecordAppwrite } from '../models/app-write.model';
+import { neonRawAPI } from './neonRawAPI';
 
 // Performance metrics for load testing
 export interface LoadTestResult<T = any> {
@@ -478,6 +479,80 @@ class LoadTestService {
     return serviceResults;
   }
 
+  // Test NEON Raw API
+  public async testNeonRawAPI(): Promise<ServiceLoadTestResults> {
+    const results: LoadTestResult[] = [];
+    
+    // Test getAllRecords
+    results.push(
+      await this.timeExecution(
+        () => neonRawAPI.getAllRecords(),
+        'getAllRecords'
+      )
+    );
+
+    // Test createRecord
+    const createEmployeeTest = await this.timeExecution(
+      () => neonRawAPI.createRecord(mockRecordData),
+      'createRecord'
+    );
+    results.push(createEmployeeTest);
+
+    // Only continue if create was successful
+    if (createEmployeeTest.success) {
+      const id = await neonRawAPI.getLastId();
+      const createdEmployeeId = id || 1;
+
+      // Test getRecordById
+      results.push(
+        await this.timeExecution(
+          () => neonRawAPI.getRecordById(createdEmployeeId),
+          'getRecordById'
+        )
+      );
+
+      // Test searchRecords
+      results.push(
+        await this.timeExecution(
+          () => neonRawAPI.searchRecords('name', 'Load Test'),
+          'searchRecords'
+        )
+      );
+
+      // Test updateRecord
+      results.push(
+        await this.timeExecution(
+          () => neonRawAPI.updateRecord(createdEmployeeId, { ...mockRecordData, name: 'Updated Load Test User' }),
+          'updateRecord'
+        )
+      );
+
+      // Test deleteRecord
+      results.push(
+        await this.timeExecution(
+          () => neonRawAPI.deleteRecord(createdEmployeeId),
+          'deleteRecord'
+        )
+      );
+    }
+    
+    const { averageTime, totalTime } = this.calculateAggregateMetrics(results);
+    
+    const serviceResults: ServiceLoadTestResults = {
+      serviceName: 'NEON Raw API',
+      results,
+      averageTime,
+      totalTime,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Save the results
+    this.savedResults.push(serviceResults);
+    this.saveResults();
+
+    return serviceResults;
+  }
+
   // Test all services
   public async testAllServices(): Promise<ServiceLoadTestResults[]> {
     const results: ServiceLoadTestResults[] = [];
@@ -505,6 +580,12 @@ class LoadTestService {
     } catch (error) {
       console.error('Error testing NEON API:', error);
     }
+
+    try {
+      results.push(await this.testNeonRawAPI());
+    } catch (error) {
+      console.error('Error testing NEON Raw API:', error);
+    }
     
     return results;
   }
@@ -520,6 +601,8 @@ class LoadTestService {
         return this.testFirebaseService();
       case ApiType.NEON:
         return this.testNeonAPI();
+      case ApiType.NEON_RAW:
+        return this.testNeonRawAPI();
       default:
         throw new Error('Unknown API type');
     }

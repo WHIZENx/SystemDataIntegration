@@ -6,16 +6,18 @@ import { neonAPI } from '../services/neonAPI';
 import { Record } from '../models/record.model';
 import { QUERY_TYPE } from '../enums/query-type.enum';
 import { RecordAppwrite } from '../models/app-write.model';
+import { neonRawAPI } from '../services/neonRawAPI';
 
 // Service type definition
-type ServiceType = 'firebase' | 'appwrite' | 'googlesheets' | 'neon';
+type ServiceType = 'googlesheets' | 'neon' | 'neonraw' | 'firebase' | 'appwrite' ;
 
 // Map of service names for display
 const SERVICE_NAMES = {
-  firebase: 'Firebase',
-  appwrite: 'Appwrite',
   googlesheets: 'Google Sheets',
   neon: 'Neon Database',
+  neonraw: 'Neon Database Raw',
+  firebase: 'Firebase',
+  appwrite: 'Appwrite',
 };
 
 // Interface for unified service operations
@@ -40,7 +42,7 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
   const [testResult, setTestResult] = useState<Record | null>(null);
   const [searchField, setSearchField] = useState('name');
   const [searchValue, setSearchValue] = useState('');
-  const [serviceType, setServiceType] = useState<ServiceType>('firebase');
+  const [serviceType, setServiceType] = useState<ServiceType>('googlesheets');
 
   // Get the currently selected service
   const getService = (): ServiceInterface => {
@@ -53,8 +55,10 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
         return googleSheetsAPI;
       case 'neon':
         return neonAPI;
+      case 'neonraw':
+        return neonRawAPI;
       default:
-        return firebaseService;
+        return googleSheetsAPI;
     }
   };
   
@@ -351,7 +355,7 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       {/* Service selector */}
       <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Select Service</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
           {(Object.keys(SERVICE_NAMES) as ServiceType[]).map((type) => (
             <button
               key={type}
