@@ -24,3 +24,30 @@ export const AUTO_UPLOAD_PROGRESS_DELAY = 300;
 export const AUTO_UPLOAD_DELAY = 1000;
 
 export const DEFAULT_QUERY_TYPE = QUERY_TYPE.CONTAINS;
+
+export const SELECT_DEPARTMENT = [
+  {
+    label: 'Engineering',
+    value: 'Engineering',
+  },
+  {
+    label: 'Marketing',
+    value: 'Marketing',
+  },
+  {
+    label: 'Sales',
+    value: 'Sales',
+  },
+  {
+    label: 'HR',
+    value: 'HR',
+  },
+  {
+    label: 'Finance',
+    value: 'Finance',
+  },
+  {
+    label: 'Operations',
+    value: 'Operations',
+  },
+];

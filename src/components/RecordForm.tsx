@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FormData, FormErrors, RecordFormProps } from '../models/record.model';
 import { appwriteService } from '../services/appwriteService';
+import { SELECT_DEPARTMENT } from '../constants/default.constant';
 
 const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loading, init }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -273,13 +274,12 @@ const RecordForm: React.FC<RecordFormProps> = ({ record, onSubmit, onCancel, loa
             errors.department ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
           } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
         >
-          <option value="">Select department</option>
-          <option value="Engineering">Engineering</option>
-          <option value="Marketing">Marketing</option>
-          <option value="Sales">Sales</option>
-          <option value="HR">Human Resources</option>
-          <option value="Finance">Finance</option>
-          <option value="Operations">Operations</option>
+          <option value="">Select Department</option>
+          {SELECT_DEPARTMENT.map((department) => (
+            <option key={department.value} value={department.value}>
+              {department.label}
+            </option>
+          ))}
         </select>
         {errors.department && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.department}</p>}
       </div>

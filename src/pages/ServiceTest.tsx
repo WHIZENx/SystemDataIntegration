@@ -7,6 +7,7 @@ import { Record } from '../models/record.model';
 import { QUERY_TYPE } from '../enums/query-type.enum';
 import { RecordAppwrite } from '../models/app-write.model';
 import { neonRawAPI } from '../services/neonRawAPI';
+import { SELECT_DEPARTMENT } from '../constants/default.constant';
 
 // Service type definition
 type ServiceType = 'googlesheets' | 'neon' | 'neonraw' | 'firebase' | 'appwrite' ;
@@ -101,7 +102,7 @@ const ServiceTest: React.FC<{ activePage: string }> = ({ activePage }) => {
       name: `Test User ${Math.floor(Math.random() * 1000)}`,
       email: `test${Math.floor(Math.random() * 1000)}@example.com`,
       phone: `+1${Math.floor(Math.random() * 10000000000)}`,
-      department: ['HR', 'IT', 'Sales', 'Marketing'][Math.floor(Math.random() * 4)],
+      department: SELECT_DEPARTMENT[Math.floor(Math.random() * SELECT_DEPARTMENT.length)].value,
       position: ['Manager', 'Developer', 'Designer', 'Analyst'][Math.floor(Math.random() * 4)],
       profile_image: '',
       status: 1,

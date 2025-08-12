@@ -11,7 +11,7 @@ import LoadTestNavigator from './pages/LoadTest';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
 import { firebaseService } from './services/firebaseService';
-import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, DEFAULT_RECORD, IS_AUTO_SEARCH } from './constants/default.constant';
+import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, IS_AUTO_SEARCH, SELECT_DEPARTMENT } from './constants/default.constant';
 import { appwriteService } from './services/appwriteService';
 import { RecordAppwrite } from './models/app-write.model';
 import ServiceTest from './pages/ServiceTest';
@@ -477,7 +477,17 @@ const App: React.FC = () => {
               <div className="flex justify-between">
                 <h2 className="text-2xl font-bold mb-4">{editingRecord ? 'Edit Record' : 'Add New Record'}</h2>
                 {!editingRecord && <button
-                  onClick={() => handleEdit(DEFAULT_RECORD)}
+                  onClick={() => handleEdit({
+                    name: `Test User ${Math.floor(Math.random() * 1000)}`,
+                    email: `test${Math.floor(Math.random() * 1000)}@example.com`,
+                    phone: `+1${Math.floor(Math.random() * 10000000000)}`,
+                    department: SELECT_DEPARTMENT[Math.floor(Math.random() * SELECT_DEPARTMENT.length)].value,
+                    position: ['Manager', 'Developer', 'Designer', 'Analyst'][Math.floor(Math.random() * 4)],
+                    profile_image: '',
+                    status: 1,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  } as Record)}
                   className="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
                   disabled={loading}
                 >
