@@ -54,7 +54,8 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
     }
   };
 
-  const handleUpdateThresholds = () => {
+  const handleUpdateThresholds = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     loadTestService.setThresholds(thresholds);
     setSuccess('Performance thresholds updated');
   };
@@ -220,56 +221,66 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
       <div className="mb-6 bg-white dark:bg-gray-800 rounded-md shadow-md p-4">
         <h2 className="text-lg font-bold mb-4">Performance Thresholds (ms)</h2>
         
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Excellent (below)
-            </label>
-            <input
-              type="number"
-              value={thresholds.excellent}
-              onChange={(e) => setThresholds({...thresholds, excellent: Number(e.target.value)})}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={loading}
-            />
+        <form onSubmit={handleUpdateThresholds}>
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Excellent (below)
+              </label>
+              <input
+                type="number"
+                value={thresholds.excellent}
+                name="excellent"
+                min={thresholds.good + 1}
+                onChange={(e) => setThresholds({...thresholds, excellent: Number(e.target.value)})}
+                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={loading}
+              />
+            </div>
+            
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Good (below)
+              </label>
+              <input
+                type="number"
+                value={thresholds.good}
+                name="good"
+                min={thresholds.low + 1}
+                max={thresholds.excellent - 1}
+                onChange={(e) => setThresholds({...thresholds, good: Number(e.target.value)})}
+                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={loading}
+              />
+            </div>
+            
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Low (above)
+              </label>
+              <input
+                type="number"
+                value={thresholds.low}
+                name="low"
+                min={0}
+                max={thresholds.good - 1}
+                onChange={(e) => setThresholds({...thresholds, low: Number(e.target.value)})}
+                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={loading}
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-green-300 w-full"
+              >
+                Update
+              </button>
+            </div>
           </div>
-          
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Good (below)
-            </label>
-            <input
-              type="number"
-              value={thresholds.good}
-              onChange={(e) => setThresholds({...thresholds, good: Number(e.target.value)})}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={loading}
-            />
-          </div>
-          
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Low (above)
-            </label>
-            <input
-              type="number"
-              value={thresholds.low}
-              onChange={(e) => setThresholds({...thresholds, low: Number(e.target.value)})}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              disabled={loading}
-            />
-          </div>
-          
-          <div className="flex items-end">
-            <button
-              onClick={handleUpdateThresholds}
-              disabled={loading}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-green-300 w-full"
-            >
-              Update
-            </button>
-          </div>
-        </div>
+        </form>
         
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">
           <div className="flex justify-center gap-6 mt-2">
