@@ -186,10 +186,10 @@ export class AppwriteService {
    * Search rows in Appwrite Database
    * @returns Promise with the list of rows
    */
-  async searchRecords(query: string) {
+  async searchRecords(field: keyof RecordAppwrite, query: string) {
     try {
       const result = await database.listDocuments(this.databaseId, this.collectionId, [
-        Query.search('name', query),
+        Query.contains(field, query),
       ]);
       return result.documents as unknown as RecordAppwrite[];
     } catch (error) {

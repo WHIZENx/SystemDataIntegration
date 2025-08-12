@@ -177,6 +177,22 @@ class NeonAPIService {
   }
 
   /**
+   * Get the last inserted ID from the 'Employee' table
+   */
+  async getLastId(): Promise<number> {
+    try {
+      const result = await this.makeAuthenticatedRequest<Record[]>(
+        'GET',
+        `/${TABLE_NAME}?order=id.desc&limit=1&select=id`
+      );
+      return result[0].id;
+    } catch (error) {
+      console.error('Error fetching last inserted ID:', error);
+      throw new Error('Failed to fetch last inserted ID from NEON Database');
+    }
+  }
+
+  /**
    * EMPLOYEE CRUD OPERATIONS
    * These methods work with the 'Employee' table using the Record interface
    */
@@ -230,11 +246,13 @@ class NeonAPIService {
   /**
    * READ - Get a specific employee by ID
    */
-  async getRecordById(id: string): Promise<Record> {
+  async getRecordById(id: string, cancelToken?: CancelToken): Promise<Record> {
     try {
       const result = await this.makeAuthenticatedRequest<Record>(
         'GET',
-        `/${TABLE_NAME}/${id}`
+        `/${TABLE_NAME}?id=eq.${id}`,
+        undefined,
+        cancelToken
       );
 
       if (!result) {
@@ -294,12 +312,7 @@ class NeonAPIService {
   /**
    * SEARCH - Search employees by criteria
    */
-  async searchRecords(criteria: {
-    name?: string;
-    email?: string;
-    department?: string;
-    position?: string;
-  }): Promise<Record[]> {
+  async searchRecords(field: keyof Record, value: string, cancelToken?: CancelToken): Promise<Record[]> {
     try {
       // const queryParams = new URLSearchParams();
       // Object.entries(criteria).forEach(([key, value]) => {
@@ -308,11 +321,13 @@ class NeonAPIService {
       //   }
       // });
 
-      const endpoint = `/${TABLE_NAME}?name=ilike.%${criteria.name}%`;
+      const endpoint = `/${TABLE_NAME}?${field}=ilike.%${value}%`;
       
       const result = await this.makeAuthenticatedRequest<Record[]>(
         'GET',
-        endpoint
+        endpoint,
+        undefined,
+        cancelToken
       );
 
       return result || [];

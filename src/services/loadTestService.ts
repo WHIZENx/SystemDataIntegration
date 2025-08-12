@@ -9,17 +9,17 @@ import { ApiType } from '../enums/api-type.enum';
 import { Record } from '../models/record.model';
 
 // Performance metrics for load testing
-export interface LoadTestResult {
+export interface LoadTestResult<T = any> {
   functionName: string;
   executionTime: number; // in milliseconds
   success: boolean;
   error?: string;
-  data?: any; // Store any returned data if needed for subsequent tests
+  data?: T; // Store T returned data if needed for subsequent tests
 }
 
-export interface ServiceLoadTestResults {
+export interface ServiceLoadTestResults<T = any> {
   serviceName: string;
-  results: LoadTestResult[];
+  results: LoadTestResult<T>[];
   averageTime?: number; // Average execution time
   totalTime?: number; // Total execution time
   timestamp: string; // When the test was run
@@ -78,10 +78,10 @@ class LoadTestService {
   }
 
   // Helper method to time a function execution
-  private async timeExecution(
-    func: () => Promise<any>,
+  private async timeExecution<T>(
+    func: () => Promise<T>,
     functionName: string
-  ): Promise<LoadTestResult> {
+  ): Promise<LoadTestResult<T>> {
     try {
       const start = performance.now();
       const result = await func();
@@ -189,6 +189,14 @@ class LoadTestService {
         )
       );
 
+      // Test searchRecords
+      results.push(
+        await this.timeExecution(
+          () => googleSheetsAPI.searchRecords('name', 'Load Test'),
+          'searchRecords'
+        )
+      );
+
       // Test updateRecord
       results.push(
         await this.timeExecution(
@@ -257,7 +265,7 @@ class LoadTestService {
       // Test searchRecords
       results.push(
         await this.timeExecution(
-          () => appwriteService.searchRecords('Load Test'),
+          () => appwriteService.searchRecords('name', 'Load Test'),
           'searchRecords'
         )
       );
@@ -345,11 +353,11 @@ class LoadTestService {
         )
       );
 
-      // Test findRecordsByField
+      // Test searchRecords
       results.push(
         await this.timeExecution(
-          () => firebaseService.findRecordsByField('name', 'Load Test'),
-          'findRecordsByField'
+          () => firebaseService.searchRecords('name', 'Load Test'),
+          'searchRecords'
         )
       );
 
@@ -408,7 +416,8 @@ class LoadTestService {
     
     // Only continue if create was successful
     if (createEmployeeTest.success) {
-      const createdEmployeeId = createEmployeeTest.data?.id || 1;
+      const id = await neonAPI.getLastId();
+      const createdEmployeeId = id || 1;
 
       // Test getRecordById
       results.push(
@@ -421,7 +430,7 @@ class LoadTestService {
       // Test searchRecords
       results.push(
         await this.timeExecution(
-          () => neonAPI.searchRecords({ name: 'Load Test' }),
+          () => neonAPI.searchRecords('name', 'Load Test'),
           'searchRecords'
         )
       );
@@ -444,12 +453,12 @@ class LoadTestService {
     }
 
     // Test health check
-    results.push(
-      await this.timeExecution(
-        () => neonAPI.healthCheck(),
-        'healthCheck'
-      )
-    );
+    // results.push(
+    //   await this.timeExecution(
+    //     () => neonAPI.healthCheck(),
+    //     'healthCheck'
+    //   )
+    // );
 
     const { averageTime, totalTime } = this.calculateAggregateMetrics(results);
     

@@ -158,7 +158,7 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
     
     try {
       setLoading(true);
-      const searchResults = await firebaseService.findRecordsByField(
+      const searchResults = await firebaseService.searchRecords(
         searchField as keyof Record, 
         searchValue,
         DEFAULT_QUERY_TYPE
@@ -234,12 +234,12 @@ const FirebaseTest: React.FC<{ activePage: string }> = ({ activePage }) => {
         throw new Error('updateRecord test failed - record not updated correctly');
       }
       
-      // 5. Test findRecordsByField
-      const searchResults = await firebaseService.findRecordsByField('name', 'Updated Test User', DEFAULT_QUERY_TYPE);
+      // 5. Test searchRecords
+      const searchResults = await firebaseService.searchRecords('name', 'Updated Test User', DEFAULT_QUERY_TYPE);
       if (searchResults.length > 0 && searchResults.some(r => r.id === createdRecord.id)) {
-        logSuccess('5. findRecordsByField test passed', searchResults);
+        logSuccess('5. searchRecords test passed', searchResults);
       } else {
-        throw new Error('findRecordsByField test failed - search returned no results');
+        throw new Error('searchRecords test failed - search returned no results');
       }
       
       // 6. Test deleteRecord

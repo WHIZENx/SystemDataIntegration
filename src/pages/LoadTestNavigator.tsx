@@ -192,7 +192,7 @@ const LoadTestNavigator: React.FC<LoadTestNavigatorProps> = ({ activePage }) => 
             </label>
             <select
               value={selectedService}
-              onChange={(e) => setSelectedService(e.target.value as ApiType | 'all')}
+              onChange={(e) => setSelectedService(Number(e.target.value) || 'all')}
               className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               disabled={loading}
             >

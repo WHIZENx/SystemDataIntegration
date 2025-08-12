@@ -59,6 +59,11 @@ const App: React.FC = () => {
     if (cancelTokenRef.current) {
       cancelTokenRef.current.cancel('Operation cancelled due to new request');
     }
+
+    if (searchName.trim() && records.length > 0) {
+      await searchRecords(searchName);
+      return;
+    }
     
     // Create a new cancel token
     cancelTokenRef.current = axios.CancelToken.source();
@@ -100,26 +105,31 @@ const App: React.FC = () => {
       return;
     }
 
+    // Cancel any ongoing request
+    if (cancelTokenRef.current) {
+      cancelTokenRef.current.cancel('Operation cancelled due to new request');
+    }
+
+    // Create a new cancel token
+    cancelTokenRef.current = axios.CancelToken.source();
+    const cancelToken = cancelTokenRef.current.token;
+
     setLoading(true);
     setError('');
     setSuccess('');
     try {
       if (apiType === ApiType.NEON) {
-        const data = await neonAPI.searchRecords({ name: name.trim() });
+        const data = await neonAPI.searchRecords('name', name.trim(), cancelToken);
         setRecords(data);
       } else if (apiType === ApiType.FIREBASE) {
-        const data = await firebaseService.findRecordsByField('name', name.trim(), DEFAULT_QUERY_TYPE);
+        const data = await firebaseService.searchRecords('name', name.trim(), DEFAULT_QUERY_TYPE);
         setRecords(data);
       } else if (apiType === ApiType.APPWRITE) {
-        const data = await appwriteService.searchRecords(name.trim());
+        const data = await appwriteService.searchRecords('name', name.trim());
         setRecords(data);
       } else {
-        // For Google Sheets, filter locally
-        const allData = await googleSheetsAPI.getAllRecords();
-        const filtered = allData.filter(record => 
-          record.name.toLowerCase().includes(name.toLowerCase())
-        );
-        setRecords(filtered);
+        const data = await googleSheetsAPI.searchRecords('name', name.trim(), cancelToken);
+        setRecords(data);
       }
     } catch (err) {
       setError('Failed to search records: ' + (err as Error).message);

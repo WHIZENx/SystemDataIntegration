@@ -377,7 +377,7 @@ class GoogleSheetsAPIService {
   }
 
   // GET a single record by ID
-  async getRecord(id: number): Promise<Record> {
+  async getRecord(id: number, cancelToken?: CancelToken): Promise<Record> {
     if (this.useMockData) {
       await this.delay(500);
       const record = this.mockData.find(record => record.id === id);
@@ -395,6 +395,7 @@ class GoogleSheetsAPIService {
             'Content-Type': 'text/plain',
           },
           timeout: 30000,
+          cancelToken: cancelToken,
         }
       );
 
@@ -411,6 +412,43 @@ class GoogleSheetsAPIService {
     } catch (error) {
       console.error('Error fetching record:', error);
       throw new Error('Failed to fetch record from Google Sheets');
+    }
+  }
+
+  // Search records by name
+  async searchRecords(field: keyof Record, value: string, cancelToken?: CancelToken): Promise<Record[]> {
+    if (this.useMockData) {
+      await this.delay(500);
+      return this.mockData.filter(record => 
+        record[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      );
+    }
+
+    try {
+      const response: AxiosResponse<APIResponse> = await axios.get(
+        `${this.baseURL}?action=search&${field}=${encodeURIComponent(`%${value}%`)}`,
+        {
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+          timeout: 30000,
+          cancelToken: cancelToken,
+        }
+      );
+
+      const result = response.data;
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      if (!result.records) {
+        throw new Error('No records returned from API');
+      }
+
+      return result.records;
+    } catch (error) {
+      console.error('Error searching records:', error);
+      throw new Error('Failed to search records from Google Sheets');
     }
   }
 }

@@ -124,7 +124,7 @@ export class FirebaseService {
    * @param matchType Match type - 'exact' for exact match or 'contains' for substring search
    * @returns Promise with matching records array
    */
-  async findRecordsByField(field: keyof Record, value: string, matchType = DEFAULT_QUERY_TYPE): Promise<Record[]> {
+  async searchRecords(field: keyof Record, value: string, matchType = DEFAULT_QUERY_TYPE): Promise<Record[]> {
     if (matchType === QUERY_TYPE.EXACT) {
       // For exact matching, use Firebase's equalTo operator
       const recordsQuery = query(
