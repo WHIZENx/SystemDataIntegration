@@ -45,14 +45,14 @@ const Navigation: React.FC<NavigationProps> = ({
               </button>
               
               <button 
-                onClick={() => onNavigate('firebase-test')}
+                onClick={() => onNavigate('service-test')}
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activePage === 'firebase-test' 
+                  activePage === 'service-test' 
                     ? 'bg-blue-500 text-white' 
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
-                Firebase Test
+                Service Test
               </button>
               
               <button 
@@ -123,14 +123,14 @@ const Navigation: React.FC<NavigationProps> = ({
             </button>
             
             <button 
-              onClick={() => onNavigate('firebase-test')}
+              onClick={() => onNavigate('service-test')}
               className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left ${
-                activePage === 'firebase-test' 
+                activePage === 'service-test' 
                   ? 'bg-blue-500 text-white' 
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              Firebase Test
+              Service Test
             </button>
             
             <button 

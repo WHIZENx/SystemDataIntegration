@@ -7,6 +7,7 @@ import { firebaseService } from './firebaseService';
 import { neonAPI } from './neonAPI';
 import { ApiType } from '../enums/api-type.enum';
 import { Record } from '../models/record.model';
+import { RecordAppwrite } from '../models/app-write.model';
 
 // Performance metrics for load testing
 export interface LoadTestResult<T = any> {
@@ -181,11 +182,11 @@ class LoadTestService {
       // Assuming the createRecord returns the created record with an id
       const createdRecordId = createRecordTest.data?.id || 1;
 
-      // Test getRecord
+      // Test getRecordById
       results.push(
         await this.timeExecution(
-          () => googleSheetsAPI.getRecord(createdRecordId),
-          'getRecord'
+          () => googleSheetsAPI.getRecordById(createdRecordId),
+          'getRecordById'
         )
       );
 
@@ -273,7 +274,7 @@ class LoadTestService {
       // Test updateRecord with proper type
       results.push(
         await this.timeExecution(
-          () => appwriteService.updateRecord(createdRowId, { 
+          () => appwriteService.updateRecord(createdRowId, {
             name: 'Updated Load Test User',
             email: mockRecordData.email,
             phone: mockRecordData.phone,
@@ -283,7 +284,7 @@ class LoadTestService {
             status: mockRecordData.status,
             created_at: mockRecordData.created_at,
             updated_at: mockRecordData.updated_at
-          }),
+          } as RecordAppwrite),
           'updateRecord'
         )
       );

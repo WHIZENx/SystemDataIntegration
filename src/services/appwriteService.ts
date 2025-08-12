@@ -236,9 +236,20 @@ export class AppwriteService {
    * @param data Data to update the row with
    * @returns Promise with the updated row data
    */
-  async updateRecord(id: string | number, data: Omit<RecordAppwrite, 'id' | '$id' | '$sequence' | '$createdAt' | '$updatedAt' | '$permissions' | '$collectionId' | '$databaseId'>) {
+  async updateRecord(id: string | number, data: RecordAppwrite) {
     try {
-      const result = await database.updateDocument(this.databaseId, this.collectionId, id.toString(), data);
+      const result = await database.updateDocument(this.databaseId, this.collectionId, id.toString(), {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        department: data.department,
+        position: data.position,
+        profile_image: data.profile_image,
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      });
       return result as unknown as RecordAppwrite;
     } catch (error) {
       console.error('Error updating row:', error);

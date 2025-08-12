@@ -7,7 +7,6 @@ import RecordList from './components/RecordList';
 import ExportButtons from './components/ExportButtons';
 import Navigation from './components/Navigation';
 import ImageGallery from './pages/ImageGallery';
-import FirebaseTest from './pages/FirebaseTest';
 import LoadTestNavigator from './pages/LoadTestNavigator';
 import { Record } from './models/record.model';
 import { ApiType } from './enums/api-type.enum';
@@ -15,6 +14,7 @@ import { firebaseService } from './services/firebaseService';
 import { AUTO_SEARCH_DELAY, DEFAULT_QUERY_TYPE, DEFAULT_RECORD, IS_AUTO_SEARCH } from './constants/default.constant';
 import { appwriteService } from './services/appwriteService';
 import { RecordAppwrite } from './models/app-write.model';
+import ServiceTest from './pages/ServiceTest';
 
 const App: React.FC = () => {
   const [init, setInit] = useState<boolean>(false);
@@ -212,7 +212,7 @@ const App: React.FC = () => {
       } else if (apiType === ApiType.FIREBASE) {
         await firebaseService.updateRecord(Number(id), recordData);
       } else if (apiType === ApiType.APPWRITE) {
-        await appwriteService.updateRecord(id, recordData);
+        await appwriteService.updateRecord(id, recordData as RecordAppwrite);
       } else {
         await googleSheetsAPI.updateRecord(Number(id), recordData);
       }
@@ -480,7 +480,7 @@ const App: React.FC = () => {
         ) : activePage === 'load-test' ? (
           <LoadTestNavigator activePage={activePage} />
         ) : (
-          <FirebaseTest activePage={activePage} />
+          <ServiceTest activePage={activePage} />
         )}
       </div>
     </div>

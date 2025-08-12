@@ -377,7 +377,7 @@ class GoogleSheetsAPIService {
   }
 
   // GET a single record by ID
-  async getRecord(id: number, cancelToken?: CancelToken): Promise<Record> {
+  async getRecordById(id: number, cancelToken?: CancelToken): Promise<Record> {
     if (this.useMockData) {
       await this.delay(500);
       const record = this.mockData.find(record => record.id === id);
